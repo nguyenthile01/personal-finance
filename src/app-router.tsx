@@ -1,8 +1,8 @@
 import { Route, Routes } from "react-router-dom";
-import type { RoutesConfig } from "./models/routes";
 import { Suspense } from "react";
 import { Spinner } from "@radix-ui/themes";
 import { routes } from "./config/routes";
+import type { RoutesConfig } from "./interfaces/routes";
 
 function renderRoutes(routesConfig: RoutesConfig[]) {
     return routesConfig.map(({ path, element, children }, index) => (

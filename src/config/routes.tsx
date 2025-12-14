@@ -1,7 +1,8 @@
 import { lazy } from "react";
 import { Navigate } from "react-router-dom";
-import type { RoutesConfig } from "../models/routes";
 import { NotFoundError } from "../app/errors/not-found/not-found-error";
+import type { RoutesConfig } from "../interfaces/routes";
+import { BanknoteArrowUp, LayoutDashboard } from "lucide-react";
 
 const DashboardPage = lazy(() => import("../app/dashboard/page"));
 const RevenuePage = lazy(() => import("../app/revenue/page"));
@@ -14,15 +15,21 @@ export const routes: RoutesConfig[] = [
     },
     {
         path: "/dashboard",
-        element: <DashboardPage />
+        element: <DashboardPage />,
+        name: "Dashboard",
+        icon: LayoutDashboard
     },
     {
         path: "/revenue",
-        element: <RevenuePage />
+        element: <RevenuePage />,
+        name: "Revenue",
+        icon: BanknoteArrowUp
     },
     {
         path: "/expenses",
-        element: <ExpensesPage />
+        element: <ExpensesPage />,
+        name: "Expenses",
+        icon: BanknoteArrowUp
     },
     {
         path: "*",
