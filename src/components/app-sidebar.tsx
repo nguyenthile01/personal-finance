@@ -1,5 +1,5 @@
 import { routes } from "@/config/routes";
-import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "./ui/sidebar";
+import { Sidebar, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "./ui/sidebar";
 import { ChevronRight, Command } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./ui/collapsible";
@@ -17,26 +17,26 @@ export default function AppSidebar() {
 
                 <SidebarGroupContent className="overflow-y-auto max-h-[calc(100vh-2rem)]">
                     <SidebarMenu>
-                        {routes.map(
-                            (route) =>
-                                route.name && (
-                                    <SidebarMenuItem key={route.path}>
-                                        {route.children ? (
+                        {routes.map((route) => {
+                            if (route.layout === "main" && route.children && route.children.length > 0) {
+                                return route.children.map((childRoute) => (
+                                    <SidebarMenuItem key={childRoute.path}>
+                                        {childRoute.children ? (
                                             /* COLLAPSIBLE PARENT */
                                             <Collapsible>
                                                 <CollapsibleTrigger asChild>
                                                     <SidebarMenuButton>
-                                                        {route.icon && (
-                                                            <route.icon className="size-4 shrink-0" />
+                                                        {childRoute.icon && (
+                                                            <childRoute.icon className="size-4 shrink-0" />
                                                         )}
-                                                        <span>{route.name}</span>
+                                                        <span>{childRoute.name}</span>
                                                         <ChevronRight className="ml-auto size-4 transition-transform data-[state=open]:rotate-90" />
                                                     </SidebarMenuButton>
                                                 </CollapsibleTrigger>
 
                                                 <CollapsibleContent>
                                                     <SidebarMenu className="pl-6">
-                                                        {route.children.map(
+                                                        {childRoute.children.map(
                                                             (child) =>
                                                                 child.name && (
                                                                     <SidebarMenuItem key={child.path}>
@@ -57,17 +57,19 @@ export default function AppSidebar() {
                                         ) : (
                                             /* NORMAL ITEM */
                                             <SidebarMenuButton asChild>
-                                                <Link to={route.path}>
-                                                    {route.icon && (
-                                                        <route.icon className="size-4 shrink-0" />
+                                                <Link to={childRoute.path}>
+                                                    {childRoute.icon && (
+                                                        <childRoute.icon className="size-4 shrink-0" />
                                                     )}
-                                                    <span>{route.name}</span>
+                                                    <span>{childRoute.name}</span>
                                                 </Link>
                                             </SidebarMenuButton>
                                         )}
                                     </SidebarMenuItem>
-                                )
-                        )}
+                                ));
+                            }
+                            return null;
+                        })}
                     </SidebarMenu>
                 </SidebarGroupContent>
             </SidebarGroup>

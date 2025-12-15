@@ -6,4 +6,5 @@ export interface RoutesConfig {
     children?: RoutesConfig[];
     name?: string | null;
     icon?: ComponentType<SVGProps<SVGSVGElement>>| null;
+    layout?: string | null;
 }
