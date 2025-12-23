@@ -7,14 +7,11 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./ui/collap
 export default function AppSidebar() {
     return (
         <Sidebar>
-            <SidebarHeader />
-
             <SidebarGroup>
                 <SidebarGroupLabel>
                     <Command size={16} />
                     Personal Finance
                 </SidebarGroupLabel>
-
                 <SidebarGroupContent className="overflow-y-auto max-h-[calc(100vh-2rem)]">
                     <SidebarMenu>
                         {routes.map((route) => {
@@ -24,15 +21,6 @@ export default function AppSidebar() {
                                         {childRoute.children ? (
                                             /* COLLAPSIBLE PARENT */
                                             <Collapsible>
-                                                <CollapsibleTrigger asChild>
-                                                    <SidebarMenuButton>
-                                                        {childRoute.icon && (
-                                                            <childRoute.icon className="size-4 shrink-0" />
-                                                        )}
-                                                        <span>{childRoute.name}</span>
-                                                        <ChevronRight className="ml-auto size-4 transition-transform data-[state=open]:rotate-90" />
-                                                    </SidebarMenuButton>
-                                                </CollapsibleTrigger>
 
                                                 <CollapsibleContent>
                                                     <SidebarMenu className="pl-6">
@@ -56,14 +44,16 @@ export default function AppSidebar() {
                                             </Collapsible>
                                         ) : (
                                             /* NORMAL ITEM */
-                                            <SidebarMenuButton asChild>
-                                                <Link to={childRoute.path}>
-                                                    {childRoute.icon && (
-                                                        <childRoute.icon className="size-4 shrink-0" />
-                                                    )}
-                                                    <span>{childRoute.name}</span>
-                                                </Link>
-                                            </SidebarMenuButton>
+                                            childRoute.name && (
+                                                <SidebarMenuButton asChild>
+                                                    <Link to={childRoute.path}>
+                                                        {childRoute.icon && (
+                                                            <childRoute.icon className="size-4 shrink-0" />
+                                                        )}
+                                                        <span>{childRoute.name}</span>
+                                                    </Link>
+                                                </SidebarMenuButton>
+                                            )
                                         )}
                                     </SidebarMenuItem>
                                 ));

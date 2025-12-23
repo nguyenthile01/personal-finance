@@ -1,8 +1,5 @@
 export const AppConstant = {
-    SIDEBAR_COOKIE_NAME: "sidebar_state",
-    SIDEBAR_COOKIE_MAX_AGE: 60 * 60 * 24 * 7,
-    SIDEBAR_WIDTH: "16rem",
-    SIDEBAR_WIDTH_MOBILE: "18rem",
-    SIDEBAR_WIDTH_ICON: "3rem",
-    SIDEBAR_KEYBOARD_SHORTCUT: "b",
+    APP_NAME: "Personal Finance Manager",
+    VERSION: "1.0.0",
+    CLIENT_ERROR_STATUS_CODES: [400, 401, 403, 404, 422]
 }
