@@ -13,7 +13,6 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   // set a custom storage key if you want
   storage: undefined, // optional custom storage adapter
   auth: {
-    persistSession: false,
     detectSessionInUrl: false,
   }
 });

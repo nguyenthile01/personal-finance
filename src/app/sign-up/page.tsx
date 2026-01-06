@@ -1,7 +1,8 @@
 import ErrorDialog from "@/components/error-dialog";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
+import { useAppDispatch } from "@/store";
+import { signUp } from "@/store/auth";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -11,6 +12,7 @@ export default function SignUp() {
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [errorDialogOpen, setErrorDialogOpen] = useState(false);
+    const dispatch = useAppDispatch();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -22,13 +24,8 @@ export default function SignUp() {
                 return;
             if (!doPasswordsMatch(password, confirmPassword))
                 return;
-            const { data, error } = await supabase.auth.signUp({
-                email: email,
-                password: password,
-            });
-            if (error)
-                return;
-            navigate('/sign-in');
+            dispatch(signUp({email, password}));
+            navigate("/sign-in")
             // TODO: proceed after successful signup (e.g. redirect)
         } catch (error) {
             setErrorDialogOpen(true);
@@ -42,7 +39,7 @@ export default function SignUp() {
 
     const isPasswordValid = (password: string) => {
         const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
-        return passwordRegex.test(password);
+        return passwordRegex.test(password) || doPasswordsMatch(password, confirmPassword);
     };
 
     const doPasswordsMatch = (password: string, confirmPassword: string) => {

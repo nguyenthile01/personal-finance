@@ -11,4 +11,18 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    sourcemap: true, // keep sourcemaps for your code
+  },
+  // suppress warnings about missing source maps in dependencies
+  esbuild: {
+    sourcemap: true,
+    legalComments: 'none', // optional, can reduce noise
+  },
+  server: {
+    watch: {
+      ignored: ['**/node_modules/**'], // prevents watching node_modules
+    },
+  },
+  logLevel: 'info', // optional: can be 'warn' or 'error' to hide warnings
 })

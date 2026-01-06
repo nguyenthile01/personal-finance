@@ -12,6 +12,7 @@ export type Credentials = {
 export type AuthState = {
     user: User | null;
     token: string | null;
+    expiresAt?: number;
 };
 
 export type AuthContextType = {
