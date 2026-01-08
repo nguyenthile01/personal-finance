@@ -3,19 +3,14 @@ import type { Credentials } from "@/interfaces/auth";
 import supabase from "@/lib/supabase";
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import type { User } from "@supabase/supabase-js";
+
 const initialState: State<User> = {
-    data: {
-        id: "",
-        app_metadata: {},
-        user_metadata: {},
-        aud: "",
-        created_at: ""
-    },
+    data: null,
     errors: [],
     loading: false
 }
 export const getUser = createAsyncThunk("auth/getUser", async () => {
-    const { data, error} = await supabase.auth.getUser();
+    const { data, error } = await supabase.auth.getUser();
     if (error) throw new Error(error.message);
     return data?.user || null;
 });
@@ -31,8 +26,14 @@ export const signIn = createAsyncThunk<User, Credentials>("auth/signIn", async (
 });
 
 export const signOut = createAsyncThunk("auth/signOut", async () => {
-    await supabase.auth.signOut();
-    return null;
+    try {
+        const {error} = await supabase.auth.signOut();
+        if(error) throw new Error(error.message);
+        localStorage.clear();
+        return null;
+    } catch (error) {
+        throw error;
+    }
 });
 
 export const signUp = createAsyncThunk<User | null, Credentials>("auth/signUP", async ({ email, password }) => {

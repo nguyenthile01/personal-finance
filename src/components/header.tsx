@@ -2,12 +2,18 @@ import { DropdownMenu, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdo
 import { DropdownMenuContent } from "@radix-ui/react-dropdown-menu";
 import { CircleUserRound } from "lucide-react";
 import { useAppDispatch, type RootState } from "@/store";
-import { signOut } from "@/store/auth";
 import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { signOut } from "@/store/auth";
 
 export function Header() {
+    const navigate = useNavigate();
     const dispatch = useAppDispatch();
     const {data: user} = useSelector((state: RootState) => state.auth);
+    const onSignOut = () => {
+        dispatch(signOut());
+        navigate("/sign-in");
+    }
     return (
         <header className="flex items-center justify-space-around">
             {/* Breadcrumb */}
@@ -23,7 +29,7 @@ export function Header() {
                     <DropdownMenuItem>
                         Profile
                     </DropdownMenuItem>
-                    <DropdownMenuItem onSelect={() => dispatch(signOut())}>
+                    <DropdownMenuItem onSelect={() => onSignOut()}>
                         Sign Out
                     </DropdownMenuItem>
                 </DropdownMenuContent>

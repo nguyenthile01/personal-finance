@@ -1,27 +1,39 @@
 
-import { AppConstant } from "@/interfaces/app-common";
 import supabase from "@/lib/supabase";
 import { useAppDispatch } from "@/store";
-import { signOut } from "@/store/auth";
+import { getUser, signOut } from "@/store/auth";
 import { useEffect } from "react";
 
 export default function AuthProvider({ children }: { children: React.ReactNode }) {
   const dispatch = useAppDispatch();
-  console.log("AuthProvider rendering");
+  const authData = localStorage.getItem("sb-vmtthgtnabastdkktcol-auth-token");
+  const user = authData ? JSON.parse(authData).user : null;
 
   useEffect(() => {
-  const { data } = supabase.auth.onAuthStateChange((event) => {
-    console.log("event", event);
-    if (event === AppConstant.DATA.AUTH_STATE.PASSWORD_RECOVERY || event === AppConstant.DATA.AUTH_STATE.TOKEN_REFRESHED || event === AppConstant.DATA.AUTH_STATE.SIGNED_OUT) {
-      dispatch(signOut());
-      localStorage.clear();
-    }
-  });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("Auth Event:", session);
+      console.log("Auth User:", user);
+      switch (event) {
+        case 'SIGNED_IN':
+        case 'INITIAL_SESSION':
+          if (session?.user && !user) {
+            dispatch(getUser());
+          }
+          break;
+        case 'SIGNED_OUT':
+          if (!session) {
+            dispatch(signOut());
+          }
+          break;
 
-  return () => {
-    data.subscription.unsubscribe();
-  };
-}, [dispatch]);
+        case 'TOKEN_REFRESHED':
+          console.log("Token refreshed");
+          break;
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [dispatch, user]);
 
 
   return children;

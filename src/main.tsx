@@ -10,11 +10,9 @@ import AuthProvider from "@/auth/auth-provider.tsx";
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <Provider store={store}>
-      <AuthProvider>
         <BrowserRouter>
           <App />
         </BrowserRouter>
-      </AuthProvider>
     </Provider>
   </StrictMode>
 )
