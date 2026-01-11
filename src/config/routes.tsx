@@ -1,7 +1,7 @@
 import { lazy } from "react";
 import { NotFoundError } from "../app/errors/not-found/not-found-error";
 import type { RoutesConfig } from "../interfaces/routes";
-import { BanknoteArrowUp, LayoutDashboard } from "lucide-react";
+import { BanknoteArrowDown, BanknoteArrowUp, LayoutDashboard } from "lucide-react";
 import LoginPage from "@/app/sign-in/page";
 import { Navigate } from "react-router-dom";
 import ProtectedRoute from "../auth/protect-route";
@@ -30,6 +30,7 @@ export const routes: RoutesConfig[] = [
                 path: "/dashboard",
                 element: <DashboardPage />,
                 name: "Dashboard",
+                icon: LayoutDashboard
             },
             {
                 path: "/revenue",
@@ -41,7 +42,7 @@ export const routes: RoutesConfig[] = [
                 path: "/expenses",
                 element: <ExpensesPage />,
                 name: "Expenses",
-                icon: BanknoteArrowUp
+                icon: BanknoteArrowDown
             },
         ]
     },
