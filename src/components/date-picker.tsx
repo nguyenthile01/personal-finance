@@ -23,7 +23,7 @@ type DatePicker<T> = {
   max?: number
 }
 
-export function DatePicker(props: DatePicker<Date | DateRange>) {
+export function DatePicker(props: DatePicker<Date | DateRange | undefined>) {
   const now = new Date();
   const { mode = "single", date, setDate, min, max } = props;
 
@@ -96,7 +96,8 @@ export function DatePicker(props: DatePicker<Date | DateRange>) {
               if (mode === "single") {
                 setOpen(false)
               } else if (mode === "range") {
-                const isCompletedRange = (selected as DateRange).from && (selected as DateRange).to && (selected as DateRange).from?.getTime() != (selected as DateRange).to?.getTime();
+                const range = selected as DateRange;
+                const isCompletedRange = range.from && range.to && range.from?.getTime() != range.to?.getTime();
                 if (isCompletedRange)
                   setOpen(false)
               }
@@ -112,6 +113,17 @@ export function DatePicker(props: DatePicker<Date | DateRange>) {
               { after: new Date(now.getFullYear(), now.getMonth() + 1, now.getDate()) }
             ]}
           />
+          {mode === "range" &&
+            <Button
+              variant="outline"
+              size="sm"
+              className="mb-2"
+              onClick={() => {
+                setDate(undefined);
+              }}>
+              Reset
+            </Button>
+          }
         </PopoverContent>
       </Popover>
     </div>
