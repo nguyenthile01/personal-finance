@@ -29,11 +29,14 @@ export const getRevenues = createAsyncThunk<Revenue[], { from?: string, to?: str
   }
 });
 
-export const addRevenue = createAsyncThunk<Revenue, Omit<Revenue, "id" | "created_at">>(
+export const addRevenue = createAsyncThunk<Revenue, Omit<Revenue, "id">>(
   "revenue/add",
   async (newRevenue) => {
     try {
-      const { data, error } = await supabase.from("revenues").insert(newRevenue).select(`*, category:categories(*)`).single();
+      const { data, error } = await supabase
+        .from("revenues").insert(newRevenue)
+        .select(`*, category:categories(*)`)
+        .single();
       if (error) {
         throw new Error(error.message);
       }
@@ -47,7 +50,10 @@ export const deleteRevenue = createAsyncThunk<Revenue, number>(
   "revenue/delete",
   async (id) => {
     try {
-      const { error } = await supabase.from("revenues").delete().eq("id", id);
+      const { error } = await supabase
+        .from("revenues")
+        .delete()
+        .eq("id", id);
       if (error)
         throw new Error(error.message);
       return {
