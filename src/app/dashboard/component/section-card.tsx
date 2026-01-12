@@ -1,15 +1,15 @@
-import { Minus, TrendingUp } from "lucide-react";
+import { TrendingUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardAction, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { AppConstant } from "@/interfaces/app-common";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 
-export default function SectionCard({ name, description, title, percentage, url }
-    :{ name: string, description: string, title: string, percentage: number, url: string }) {
+export default function SectionCard({ name, description, title, percentage, url, className }
+    : React.ComponentProps<"div"> & { name: string, description: string, title: string, percentage: number, url: string }) {
     const navigate = useNavigate();
     return (
-        <Card>
+        <Card className={className}>
             <CardHeader>
                 <CardDescription>{description}</CardDescription>
                 <CardTitle>{title} {AppConstant.DATA.DEFAULT_CURRENCY}</CardTitle>
