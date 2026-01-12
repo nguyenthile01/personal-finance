@@ -16,7 +16,7 @@ import { getUser } from "@/store/auth";
 import { type DateRange } from "react-day-picker";
 import { Button } from "@/components/ui/button";
 import type { Expense } from "@/interfaces/expense";
-import { addExpense, deleteExpense, getExpense } from "@/store/expense";
+import { addExpense, deleteExpense, getExpenses } from "@/store/expense";
 
 export default function Page() {
   const header = ["category", "amount", "date", "note", ""];
@@ -46,7 +46,7 @@ export default function Page() {
     expense_date: new Date().toISOString(),
   }));
   useEffect(() => {
-    dispatch(getExpense({ from: (dateFilter as DateRange)?.from?.toISOString(), to: (dateFilter as DateRange)?.to?.toISOString() }));
+    dispatch(getExpenses({ from: (dateFilter as DateRange)?.from?.toISOString(), to: (dateFilter as DateRange)?.to?.toISOString() }));
     dispatch(getCategories());
   }, [dispatch]);
 
@@ -119,7 +119,7 @@ export default function Page() {
               const range = date as DateRange;
               setDateFilter(date);
               if(range?.from && range.to) {
-                dispatch(getExpense(
+                dispatch(getExpenses(
                 { 
                   from: range?.from?.toISOString(), 
                   to: range?.to?.toISOString() 

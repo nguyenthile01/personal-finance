@@ -16,12 +16,12 @@ const initialState: ExpenseState = {
   lastTotal: undefined
 }
 
-export const getExpense = createAsyncThunk<Expense[], { from?: string, to?: string }>("expense/getByCondition", async (params?: { from?: string, to?: string }) => {
+export const getExpenses = createAsyncThunk<Expense[], { from?: string, to?: string }>("expense/getByCondition", async (params?: { from?: string, to?: string }) => {
   try {
     let query = supabase
       .from("expenses")
       .select(`*, category:categories(*)`);
-    if (params?.from && params.to) {
+    if (params?.from && params?.to) {
       query = query
         .gte("expense_date", params.from)
         .lte("expense_date", params.to);
@@ -104,12 +104,12 @@ export const getExpenseComparision = createAsyncThunk(
         .lte("expense_date", endOfLast)
     ]);
 
-    const currentTotal = currentRes.data?.reduce((acc, row) => acc + row.amount, 0) || 0;
-    const lastTotal = lastRes.data?.reduce((acc, row) => acc + row.amount, 0) || 0;
+    const currentTotal = currentRes.data?.reduce((sum, row) => sum + row.amount, 0) || 0;
+    const lastTotal = lastRes.data?.reduce((sum, row) => sum + row.amount, 0) || 0;
 
     return { currentTotal, lastTotal };
   }
-)
+);
 
 const expenseSlice = createSlice({
   name: "expense",
@@ -138,16 +138,16 @@ const expenseSlice = createSlice({
         state.loading = false;
         state.errors = [action.error.message || "Failed to add new expense"];
       })
-      .addCase(getExpense.pending, (state) => {
+      .addCase(getExpenses.pending, (state) => {
         state.loading = true;
         state.errors = null;
       })
-      .addCase(getExpense.fulfilled, (state, action) => {
+      .addCase(getExpenses.fulfilled, (state, action) => {
         state.loading = false;
         state.data = action.payload;
         state.errors = null;
       })
-      .addCase(getExpense.rejected, (state, action) => {
+      .addCase(getExpenses.rejected, (state, action) => {
         state.loading = false;
         state.errors = [action.error.message || "Failed to get expense by condition"];
       })
