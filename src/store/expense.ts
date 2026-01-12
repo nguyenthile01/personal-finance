@@ -3,10 +3,17 @@ import type { Expense } from "@/interfaces/expense";
 import supabase from "@/lib/supabase";
 import { createAsyncThunk, createSlice, type ActionReducerMapBuilder } from "@reduxjs/toolkit";
 
-const initialState: State<Expense[]> = {
+interface ExpenseState extends State<Expense[]> {
+  currentTotal?: number,
+  lastTotal?: number
+}
+
+const initialState: ExpenseState = {
   data: null,
   loading: false,
-  errors: null
+  errors: null,
+  currentTotal: undefined,
+  lastTotal: undefined
 }
 
 export const getExpense = createAsyncThunk<Expense[], { from?: string, to?: string }>("expense/getByCondition", async (params?: { from?: string, to?: string }) => {
@@ -53,7 +60,7 @@ export const deleteExpense = createAsyncThunk<Expense, number>(
   async (id) => {
     try {
       const { error } = await supabase
-        .from("revenue")
+        .from("expense")
         .delete()
         .eq("id", id);
       if (error)
@@ -62,7 +69,7 @@ export const deleteExpense = createAsyncThunk<Expense, number>(
         id,
         amount: null,
         category_id: null,
-        revenue_date: null,
+        expense_date: null,
         user_id: null,
         description: null,
         category: null
@@ -70,7 +77,39 @@ export const deleteExpense = createAsyncThunk<Expense, number>(
     } catch (error) {
       throw error;
     }
-  })
+  }
+);
+
+export const getExpenseComparision = createAsyncThunk(
+  `expense/getComparision`,
+  async () => {
+    const now = new Date();
+    // Current Month Range
+    const startOfCurrent = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+    const endOfCurrent = now.toISOString();
+
+    // Last Month Range
+    const startOfLast = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
+    const endOfLast = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59).toISOString();
+
+    // Fetch both ranges
+    const [currentRes, lastRes] = await Promise.all([
+      supabase.from("expenses")
+        .select("amount")
+        .gte("expense_date", startOfCurrent)
+        .lte("expense_date", endOfCurrent),
+      supabase.from("expenses")
+        .select("amount")
+        .gte("expense_date", startOfLast)
+        .lte("expense_date", endOfLast)
+    ]);
+
+    const currentTotal = currentRes.data?.reduce((acc, row) => acc + row.amount, 0) || 0;
+    const lastTotal = lastRes.data?.reduce((acc, row) => acc + row.amount, 0) || 0;
+
+    return { currentTotal, lastTotal };
+  }
+)
 
 const expenseSlice = createSlice({
   name: "expense",
@@ -80,9 +119,11 @@ const expenseSlice = createSlice({
       state.data = null;
       state.loading = false;
       state.errors = null;
+      state.currentTotal = undefined;
+      state.lastTotal = undefined
     }
   },
-  extraReducers: (builder: ActionReducerMapBuilder<State<Expense[]>>) => {
+  extraReducers: (builder: ActionReducerMapBuilder<ExpenseState>) => {
     builder
       .addCase(addExpense.pending, (state) => {
         state.loading = true;
@@ -122,6 +163,20 @@ const expenseSlice = createSlice({
       .addCase(deleteExpense.rejected, (state, action) => {
         state.loading = false;
         state.errors = [action.error.message || "Failed to delete new expense"];
+      })
+      .addCase(getExpenseComparision.pending, (state) => {
+        state.loading = true;
+        state.errors = null;
+      })
+      .addCase(getExpenseComparision.fulfilled, (state, action) => {
+        state.loading = false;
+        state.currentTotal = action.payload.currentTotal;
+        state.lastTotal = action.payload.lastTotal;
+        state.errors = null;
+      })
+      .addCase(getExpenseComparision.rejected, (state, action) => {
+        state.loading = false;
+        state.errors = [action.error.message || "Failed to get comparision expense"];
       })
   }
 });
