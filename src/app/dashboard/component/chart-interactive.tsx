@@ -125,12 +125,14 @@ export default function ChartInteractive(
                             type="monotone"
                             stroke="var(--color-expenses)" // Use a hex code instead of var()
                             strokeWidth={2}
+                            dot={false}
                         />
                         <Line
                             dataKey="revenues"
                             type="monotone"
                             stroke="var(--color-revenues)"
                             strokeWidth={2}
+                            dot={false}
                         />
                     </LineChart>
                 </ChartContainer>
