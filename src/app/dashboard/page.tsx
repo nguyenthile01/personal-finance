@@ -3,13 +3,13 @@ import SectionCard from "./component/section-card";
 import { useAppDispatch, type RootState } from "@/store";
 import { useEffect, useState } from "react";
 import { getExpenses, getExpenseComparision } from "@/store/expense";
-import { getRevenues } from "@/store/revenue";
+import { getRevenueComparision, getRevenues } from "@/store/revenue";
 import ChartInteractive from "./component/chart-interactive";
 import type { DateRange } from "react-day-picker";
 import { subDays } from "date-fns";
 
 export default function Page() {
-    const { currentTotal: currentRevenuesSum, lastTotal: lastRevenuesSum } = useSelector((state: RootState) => state.expense);
+    const { currentTotal: currentRevenuesSum, lastTotal: lastRevenuesSum } = useSelector((state: RootState) => state.revenue);
     const { currentTotal: currentExpensesSum, lastTotal: lastExpensesSum } = useSelector((state: RootState) => state.expense);
     const { data: revenues } = useSelector((state: RootState) => state.revenue);
     const { data: expenses } = useSelector((state: RootState) => state.expense);
@@ -43,16 +43,17 @@ export default function Page() {
         });
     }, [range]);
     useEffect(() => {
-        dispatch(getExpenseComparision());
         dispatch(getRevenues({ from: dateFilter.from?.toISOString(), to: dateFilter.to?.toISOString() }));
         dispatch(getExpenses({ from: dateFilter.from?.toISOString(), to: dateFilter.to?.toISOString() }));
+        dispatch(getExpenseComparision());
+        dispatch(getRevenueComparision());
     }, [dispatch])
     return (
         <main>
-            <div className="flex items-start mb-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
                 <SectionCard
                     className="mr-2"
-                    name="Expenses"
+                    name="Revenues"
                     description={"Total Revenues"}
                     title={currentRevenuesSum?.toString() || "0"}
                     percentage={percentage(currentRevenuesSum!, lastRevenuesSum!)}
