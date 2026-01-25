@@ -1,5 +1,7 @@
 import ErrorDialog from "@/components/error-dialog";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useAppDispatch } from "@/store";
 
 import { signIn } from "@/store/auth";
@@ -31,27 +33,27 @@ export default function SignIn() {
     <main className="max-w-md mx-auto p-6">
       <h1 className="text-2xl mb-4">Sign in</h1>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <label className="block">
+        <Label className="block">
           <span className="text-sm">Email</span>
-          <input
+          <Input
             type="email"
             value={email}
             onChange={e => setEmail(e.target.value)}
             required
             className="mt-1 block w-full rounded border px-3 py-2"
           />
-        </label>
+        </Label>
 
-        <label className="block">
+        <Label className="block">
           <span className="text-sm">Password</span>
-          <input
+          <Input
             type="password"
             value={password}
             onChange={e => setPassword(e.target.value)}
             required
             className="mt-1 block w-full rounded border px-3 py-2"
           />
-        </label>
+        </Label>
 
         <div className="text-sm text-right">
           <a href="#" className="text-blue-600 hover:underline">Forgot password?</a>

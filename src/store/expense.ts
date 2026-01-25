@@ -5,7 +5,9 @@ import { createAsyncThunk, createSlice, type ActionReducerMapBuilder } from "@re
 
 interface ExpenseState extends State<Expense[]> {
   currentTotal?: number,
-  lastTotal?: number
+  lastTotal?: number,
+  from?: string,
+  to?: string
 }
 
 const initialState: ExpenseState = {
@@ -13,7 +15,9 @@ const initialState: ExpenseState = {
   loading: false,
   errors: null,
   currentTotal: undefined,
-  lastTotal: undefined
+  lastTotal: undefined,
+  from: undefined,
+  to: undefined
 }
 
 export const getExpenses = createAsyncThunk<Expense[], { from?: string, to?: string }>("expense/getByCondition", async (params?: { from?: string, to?: string }) => {
@@ -120,7 +124,9 @@ const expenseSlice = createSlice({
       state.loading = false;
       state.errors = null;
       state.currentTotal = undefined;
-      state.lastTotal = undefined
+      state.lastTotal = undefined;
+      state.from = undefined;
+      state.to = undefined;
     }
   },
   extraReducers: (builder: ActionReducerMapBuilder<ExpenseState>) => {
@@ -130,8 +136,11 @@ const expenseSlice = createSlice({
         state.errors = null;
       })
       .addCase(addExpense.fulfilled, (state, action) => {
+        const expense = action.payload;
+        const matchFilter = (state.from && state.to) ? (new Date(expense.expense_date) >= new Date(state.from) && new Date(expense.expense_date) <= new Date(state.to)) : true;
+        if (matchFilter)
+          state.data?.push(action.payload);
         state.loading = false;
-        state.data?.push(action.payload);
         state.errors = null;
       })
       .addCase(addExpense.rejected, (state, action) => {
@@ -145,6 +154,8 @@ const expenseSlice = createSlice({
       .addCase(getExpenses.fulfilled, (state, action) => {
         state.loading = false;
         state.data = action.payload;
+        state.from = action.meta.arg.from;
+        state.to = action.meta.arg.to;
         state.errors = null;
       })
       .addCase(getExpenses.rejected, (state, action) => {

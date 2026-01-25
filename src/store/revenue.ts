@@ -5,14 +5,18 @@ import type { State } from "@/interfaces/app-common";
 
 interface RevenueState extends State<Revenue[]> {
   currentTotal?: number,
-  lastTotal?: number
+  lastTotal?: number,
+  from?: string,
+  to?: string
 }
 const initialState: RevenueState = {
   data: null,
   loading: false,
   errors: null,
   currentTotal: undefined,
-  lastTotal: undefined
+  lastTotal: undefined,
+  from: undefined,
+  to: undefined
 };
 
 export const getRevenues = createAsyncThunk<Revenue[], { from?: string, to?: string }>("revenue/get", async (params?: { from?: string, to?: string }) => {
@@ -117,7 +121,9 @@ const revenueSlice = createSlice({
       state.loading = false;
       state.errors = null;
       state.currentTotal = undefined;
-      state.lastTotal = undefined
+      state.lastTotal = undefined,
+      state.from = undefined,
+      state.to = undefined
     }
   },
   extraReducers: (builder: ActionReducerMapBuilder<RevenueState>) => {
@@ -129,6 +135,8 @@ const revenueSlice = createSlice({
       .addCase(getRevenues.fulfilled, (state, action) => {
         state.data = action.payload;
         state.loading = false;
+        state.from = action.meta.arg.from;
+        state.to = action.meta.arg.to;
       })
       .addCase(getRevenues.rejected, (state, action) => {
         state.loading = false;
@@ -139,7 +147,10 @@ const revenueSlice = createSlice({
         state.errors = null;
       })
       .addCase(addRevenue.fulfilled, (state, action) => {
-        state.data?.push(action.payload);
+        const revenue = action.payload;
+        const matchFilter = (state.from && state.to) ? (new Date(revenue.revenue_date) >= new Date(state.from) && new Date(revenue.revenue_date) <= new Date(state.to)) : true;
+        if (matchFilter)
+          state.data?.push(action.payload);
         state.loading = false;
       })
       .addCase(addRevenue.rejected, (state, action) => {

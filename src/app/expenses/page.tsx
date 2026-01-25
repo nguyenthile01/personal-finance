@@ -127,7 +127,17 @@ export default function Page() {
               ));
               }
             }}
-          />
+          >
+            <Button
+              variant="ghost"
+              size="sm"
+              className="mb-2 ml-2"
+              onClick={() => {
+                setDateFilter(undefined);
+              }}>
+              Reset
+            </Button>
+          </DatePicker>
         </div>
         <Button variant="ghost" onClick={() => { setOpenExpenseForm(true) }} >
           <CirclePlus className="h-6 w-6 cursor-pointer" />

@@ -1,5 +1,7 @@
 import ErrorDialog from "@/components/error-dialog";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { useAppDispatch } from "@/store";
 import { signUp } from "@/store/auth";
@@ -50,9 +52,9 @@ export default function SignUp() {
         <main className="max-w-md mx-auto p-6">
             <h1 className="text-2xl mb-4">Sign up</h1>
             <form onSubmit={handleSubmit} className="space-y-4">
-                <label htmlFor="email" className="block">
+                <Label htmlFor="email" className="block">
                     <span className="text-sm">Username</span>
-                    <input
+                    <Input
                         id="email"
                         type="email"
                         value={email}
@@ -62,11 +64,11 @@ export default function SignUp() {
                             "border-red-500": !isEmailValid(email) && email.length > 0
                         })}
                     />
-                </label>
+                </Label>
 
-                <label htmlFor="password" className="block">
+                <Label htmlFor="password" className="block">
                     <span className="text-sm">Password</span>
-                    <input
+                    <Input
                         id="password"
                         type="password"
                         value={password}
@@ -76,11 +78,11 @@ export default function SignUp() {
                             "border-red-500": !isPasswordValid(password) && password.length > 0
                         })}
                     />
-                </label>
+                </Label>
 
-                <label htmlFor="confirmPassword" className="block">
+                <Label htmlFor="confirmPassword" className="block">
                     <span className="text-sm">Confirm Password</span>
-                    <input
+                    <Input
                         id="confirmPassword"
                         type="password"
                         value={confirmPassword}
@@ -90,7 +92,7 @@ export default function SignUp() {
                             "border-red-500": !doPasswordsMatch(password, confirmPassword) && confirmPassword.length > 0
                         })}
                     />
-                </label>
+                </Label>
                 <Button type="submit" className="w-full py-2 rounded">Sign up</Button>
             </form>
             <div>

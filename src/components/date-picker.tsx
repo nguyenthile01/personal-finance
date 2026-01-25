@@ -23,9 +23,9 @@ type DatePicker<T> = {
   max?: number
 }
 
-export function DatePicker(props: DatePicker<Date | DateRange | undefined>) {
+export function DatePicker(props: React.ComponentProps<"div"> & DatePicker<Date | DateRange | undefined>) {
   const now = new Date();
-  const { mode = "single", date, setDate, min, max } = props;
+  const { mode = "single", date, setDate, min, max, children } = props;
 
   const [open, setOpen] = React.useState(false)
   // Determine which month to display initially
@@ -113,17 +113,7 @@ export function DatePicker(props: DatePicker<Date | DateRange | undefined>) {
               { after: new Date(now.getFullYear(), now.getMonth() + 1, now.getDate()) }
             ]}
           />
-          {mode === "range" &&
-            <Button
-              variant="outline"
-              size="sm"
-              className="mb-2"
-              onClick={() => {
-                setDate(undefined);
-              }}>
-              Reset
-            </Button>
-          }
+          {children}
         </PopoverContent>
       </Popover>
     </div>

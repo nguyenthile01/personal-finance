@@ -21,7 +21,7 @@ export default function DialogForm({
 }) {
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent>
+            <DialogContent onInteractOutside={(e) => e.preventDefault()} className="sm:max-w-lg">
                 <form onSubmit={(e) => {
                     e.preventDefault();
                     OKFunc()
@@ -31,7 +31,9 @@ export default function DialogForm({
                     </DialogHeader>
                     <DialogDescription>{description || null}</DialogDescription>
                     {/* Form fields go here */}
-                    {children}
+                    <div className="my-4">
+                        {children}
+                    </div>
                     <DialogFooter>
                         {/* Action buttons go here */}
                         <Button variant="outline" className="py-2 rounded" onClick={() => onOpenChange(false)}>Cancel</Button>

@@ -119,7 +119,17 @@ export default function Page() {
               setDateFilter(date);
               dispatch(getRevenues({ from: (date as DateRange)?.from?.toISOString(), to: (date as DateRange)?.to?.toISOString() }));
             }}
-          />
+          >
+            <Button
+              variant="outline"
+              size="sm"
+              className="mb-2"
+              onClick={() => {
+                setDateFilter(undefined);
+              }}>
+              Reset
+            </Button>
+          </DatePicker>
         </div>
         <Button variant="ghost" onClick={() => { setOpenRevenueForm(true) }} >
           <CirclePlus className="h-6 w-6 cursor-pointer" />
