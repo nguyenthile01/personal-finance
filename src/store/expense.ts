@@ -21,8 +21,7 @@ const initialState: ExpenseState = {
 }
 
 export const getExpenses = createAsyncThunk<Expense[], { from?: string, to?: string }>("expense/getByCondition", async (params?: { from?: string, to?: string }) => {
-  try {
-    let query = supabase
+  let query = supabase
       .from("expenses")
       .select(`*, category:categories(*)`);
     if (params?.from && params?.to) {
@@ -33,42 +32,31 @@ export const getExpenses = createAsyncThunk<Expense[], { from?: string, to?: str
 
     const { data, error } = await query.order("expense_date", { ascending: false });
 
-    if (error)
-      throw new Error(error.message);
+    if (error) throw new Error(error.message);
     return data as Expense[];
-  } catch (error) {
-    throw error;
-  }
 });
 
 export const addExpense = createAsyncThunk<Expense, Omit<Expense, "id">>(
   "expense/add",
   async (newExpense) => {
-    try {
-      const { data, error } = await supabase
+    const { data, error } = await supabase
         .from("expenses")
         .insert(newExpense)
         .select(`*, category:categories(*)`)
         .single();
-      if (error)
-        throw new Error(error.message);
-      return data;
-    } catch (error) {
-      throw error;
-    }
+      if (error) throw new Error(error.message);
+      return data as Expense;
   }
 );
 
 export const deleteExpense = createAsyncThunk<Expense, number>(
   `expense/delete`,
   async (id) => {
-    try {
-      const { error } = await supabase
+    const { error } = await supabase
         .from("expense")
         .delete()
         .eq("id", id);
-      if (error)
-        throw new Error(error.message);
+      if (error) throw new Error(error.message);
       return {
         id,
         amount: null,
@@ -78,9 +66,6 @@ export const deleteExpense = createAsyncThunk<Expense, number>(
         description: null,
         category: null
       } as unknown as Expense
-    } catch (error) {
-      throw error;
-    }
   }
 );
 

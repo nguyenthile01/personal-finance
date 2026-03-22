@@ -18,7 +18,7 @@ import { getUser } from "@/store/auth";
 import { type DateRange } from "react-day-picker";
 import { Button } from "@/components/ui/button";
 import { format, isSameDay, subDays } from "date-fns";
-import type { ChartData } from "@/components/chart-interactive";
+import type { ChartRow } from "@/components/chart-interactive";
 import ChartInteractive from "@/components/chart-interactive";
 
 export default function Page() {
@@ -48,12 +48,6 @@ export default function Page() {
     user_id: null,
     revenue_date: new Date().toISOString(),
   }));
-  const [chartData, setChartData] = useState<ChartData<any>>(() => ({
-    data: [],
-    chartConfig: {},
-    title: "Revenue",
-    description: "Track your revenue trend over time."
-  }));
   const [range, setRange] = useState<string>("90");
   useEffect(() => {
     dispatch(getRevenues({ from: (dateFilter as DateRange)?.from?.toISOString(), to: (dateFilter as DateRange)?.to?.toISOString() }));
@@ -64,14 +58,12 @@ export default function Page() {
       dispatch(clearRevenues());
       dispatch(clearCategories());
     }
-  }, [dispatch]);
+  }, [dispatch, dateFilter]);
 
   useEffect(() => {
     if (!user) {
       dispatch(getUser());
     }
-    setRevenueSelected((prev) => ({ ...prev, user_id: user!.id }));
-
   }, [user, dispatch]);
 
   const revenueCategories = useMemo(() => categories ? categories.filter(category => category.type === "Revenue") : [], [categories]);
@@ -79,6 +71,7 @@ export default function Page() {
   const handleAddRevenue = async () => {
     if (!revenueSelected) return;
     const { id, category, ...payload } = revenueSelected;
+    console.log("Submitting revenue:", payload);
     try {
       await dispatch(addRevenue(payload));
       setOpenRevenueForm(false);
@@ -121,16 +114,18 @@ export default function Page() {
   }
 
   const processChartData = (days: number) => {
-    const data = [] as any[];
+    const data = [] as ChartRow[];
     const now = new Date();
 
-    if (!revenueData || !revenueCategories) return;
+    if (!revenueData || !revenueCategories)
+      return { data: [], chartConfig: {}, title: "Revenue", description: "Track your revenue trend over time." };
 
     // create base structure (one entry per date)
     for (let i = days; i >= 0; i--) {
+
       const date = subDays(now, i);
 
-      const entry: any = {
+      const entry: ChartRow = {
         date: format(date, "MMM dd"),
       };
 
@@ -149,6 +144,7 @@ export default function Page() {
 
       data.push(entry);
     }
+
     // build chart config ONCE
     const chartConfig = Object.fromEntries(
       revenueCategories.map((category, index) => [
@@ -160,11 +156,11 @@ export default function Page() {
       ])
     );
     // update state once
-    setChartData((prev) => ({ ...prev, data, chartConfig }));
+    return { data, chartConfig, title: "Revenue", description: "Track your revenue trend over time." };
   }
 
-  useMemo(() => {
-    processChartData(Number(range));
+  const chartData = useMemo(() => {
+    return processChartData(Number(range));
   }, [revenueData, range]);
 
   const sumRevenue = useMemo(() => {
@@ -195,7 +191,7 @@ export default function Page() {
             </Button>
           </DatePicker>
         </div>
-        <Button variant="ghost" onClick={() => { setOpenRevenueForm(true) }} >
+        <Button variant="ghost" onClick={() => { setRevenueSelected(prev => ({ ...prev, user_id: user?.id || null })); setOpenRevenueForm(true) }} >
           <CirclePlus className="h-6 w-6 cursor-pointer" />
         </Button>
       </div>

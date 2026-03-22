@@ -10,15 +10,11 @@ const initialState: State<Category[]> = {
 }
 
 export const getCategories = createAsyncThunk<Category[]>("category/getCategories", async () => {
-    try {
-        const { data, error } = await supabase.from('categories').select(`id, name, type`);
-        if (error) {
-            throw new Error(error.message);
-        }
-        return data as Category[];
-    } catch (error) {
-        throw error
+    const { data, error } = await supabase.from('categories').select(`id, name, type`);
+    if (error) {
+        throw new Error(error.message);
     }
+    return data as Category[];
 });
 
 const categoriesSlice = createSlice({
@@ -26,20 +22,20 @@ const categoriesSlice = createSlice({
     initialState,
     reducers: {
         clearCategories: (state) => {
-            state.data = [],
-                state.loading = false,
-                state.errors = null
+            state.data = [];
+            state.loading = false;
+            state.errors = null;
         }
     },
     extraReducers: (builder: ActionReducerMapBuilder<State<Category[]>>) => {
         builder
             .addCase(getCategories.pending, (state) => {
-                state.loading = true,
-                    state.errors = null
+                state.loading = true;
+                state.errors = null;
             })
             .addCase(getCategories.fulfilled, (state, action) => {
                 state.data = action.payload;
-                state.loading = false
+                state.loading = false;
             })
             .addCase(getCategories.rejected, (state, action) => {
                 state.loading = false;

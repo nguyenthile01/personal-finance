@@ -6,7 +6,7 @@ import { getExpenses, getExpenseComparision, clearExpense } from "@/store/expens
 import { clearRevenues, getRevenueComparision, getRevenues } from "@/store/revenue";
 import type { DateRange } from "react-day-picker";
 import { format, isSameDay, subDays } from "date-fns";
-import type { ChartData } from "@/components/chart-interactive";
+import type { ChartData, ChartRow } from "@/components/chart-interactive";
 import ChartInteractive from "@/components/chart-interactive";
 
 export default function Page() {
@@ -14,23 +14,16 @@ export default function Page() {
     const { currentTotal: currentExpensesSum, lastTotal: lastExpensesSum } = useSelector((state: RootState) => state.expense);
     const { data: revenues } = useSelector((state: RootState) => state.revenue);
     const { data: expenses } = useSelector((state: RootState) => state.expense);
-    const [chartData, setChartData] = useState<ChartData<any>>(() => ({
-        data: [],
-        chartConfig: {},
-        title: "Expense",
-        description: "Track your expense trend over time."
-    }));
+    // chart rows have a date plus named numeric series (revenues/expenses)
+
     const [range, setRange] = useState("90");
-    const [dateFilter, setDateFilter] = useState<DateRange>(
-        () => {
-            const to = new Date();
-            const from = subDays(to, Number(range));
-            return {
-                from: from,
-                to: to
-            }
-        }
-    );
+
+    // dateFilter is derived from range; compute with useMemo instead of setting state in an effect
+    const dateFilter = useMemo<DateRange>(() => {
+        const to = new Date();
+        const from = subDays(to, Number(range));
+        return { from, to };
+    }, [range]);
     const dispatch = useAppDispatch();
     const percentage = (current: number, last: number) => {
         if (current && last) {
@@ -41,14 +34,7 @@ export default function Page() {
             return 0;
         }
     }
-    useEffect(() => {
-        const to = new Date();
-        const from = subDays(to, Number(range));
-        setDateFilter({
-            from: from,
-            to: to
-        });
-    }, [range]);
+    // dateFilter is derived from range via useMemo; no need to set state here
     useEffect(() => {
         dispatch(getRevenues({ from: dateFilter.from?.toISOString(), to: dateFilter.to?.toISOString() }));
         dispatch(getExpenses({ from: dateFilter.from?.toISOString(), to: dateFilter.to?.toISOString() }));
@@ -60,48 +46,32 @@ export default function Page() {
             dispatch(clearExpense());
             dispatch(clearRevenues());
         };
-    }, [dispatch])
-    const processChartData = (days: number) => {
-        const data = [] as any[];
+    }, [dispatch, dateFilter])
+    const chartData = useMemo<ChartData<ChartRow>>(() => {
+        const data: ChartRow[] = [];
         const now = new Date();
 
-        // Generate an array of dates for the last x-axis
         if (revenues && expenses) {
-            for (let i = days; i >= 0; i--) {
-                // Subtract "i" days from now
+            for (let i = Number(range); i >= 0; i--) {
                 const date = subDays(now, i);
 
-                //format data into the same day
                 const revenuesData = revenues
                     .filter((revenue) => isSameDay(new Date(revenue.revenue_date), date))
                     .reduce((sum, el) => sum + el.amount, 0);
                 const expensesData = expenses
                     .filter((expense) => isSameDay(new Date(expense.expense_date), date))
                     .reduce((sum, el) => sum + el.amount, 0);
-                data.push({
-                    date: format(date, "MMM dd"),
-                    revenues: revenuesData,
-                    expenses: expensesData
-                });
-            }
-        }
-        //build chart config
-        const chartConfig = {
-            revenues: {
-                label: "Revenues",
-                color: "var(--chart-1)"
-            },
-            expenses: {
-                label: "Expenses",
-                color: "var(--chart-2)"
-            }
-        }
-        // update state one
-        setChartData((prev) => ({ ...prev, data, chartConfig }));
-    }
 
-    useMemo(() => {
-        return processChartData(Number(range));
+                data.push({ date: format(date, "MMM dd"), revenues: revenuesData, expenses: expensesData });
+            }
+        }
+
+        const chartConfig = {
+            revenues: { label: "Revenues", color: "var(--chart-1)" },
+            expenses: { label: "Expenses", color: "var(--chart-2)" },
+        };
+
+        return { data, chartConfig, title: "Expense", description: "Track your expense trend over time." };
     }, [revenues, expenses, range]);
     return (
         <main>

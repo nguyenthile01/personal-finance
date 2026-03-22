@@ -16,37 +16,25 @@ export const getUser = createAsyncThunk("auth/getUser", async () => {
 });
 
 export const signIn = createAsyncThunk<User, Credentials>("auth/signIn", async ({ email, password }) => {
-  try {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) throw new Error(error.message);
-    return data?.user || null;
-  } catch (error) {
-    throw error;
-  }
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) throw new Error(error.message);
+  return data?.user || null;
 });
 
 export const signOut = createAsyncThunk("auth/signOut", async () => {
-  try {
-    const { error } = await supabase.auth.signOut();
-    if (error) throw new Error(error.message);
-    localStorage.clear();
-    return null;
-  } catch (error) {
-    throw error;
-  }
+  const { error } = await supabase.auth.signOut();
+  if (error) throw new Error(error.message);
+  localStorage.clear();
+  return null;
 });
 
 export const signUp = createAsyncThunk<User | null, Credentials>("auth/signUP", async ({ email, password }) => {
-  try {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password
-    });
-    if (error) throw new Error(error.message);
-    return data?.user || null;
-  } catch (error) {
-    throw error;
-  }
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password
+  });
+  if (error) throw new Error(error.message);
+  return data?.user || null;
 });
 
 const authSlice = createSlice({

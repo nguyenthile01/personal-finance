@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button";
 import type { Expense } from "@/interfaces/expense";
 import { addExpense, deleteExpense, getExpenses } from "@/store/expense";
 import { subDays, format } from "date-fns";
-import type { ChartData } from "@/components/chart-interactive";
+import type { ChartData, ChartRow } from "@/components/chart-interactive";
 import { isSameDay } from "date-fns";
 import ChartInteractive from "@/components/chart-interactive";
 
@@ -49,12 +49,6 @@ export default function Page() {
     user_id: null,
     expense_date: new Date().toISOString(),
   }));
-  const [chartData, setChartData] = useState<ChartData<any>>(() => ({
-    data: [],
-    chartConfig: {},
-    title: "Expense",
-    description: "Track your expense trend over time."
-  }));
   const [range, setRange] = useState<string>("90");
   useEffect(() => {
     dispatch(getExpenses({ from: (dateFilter as DateRange)?.from?.toISOString(), to: (dateFilter as DateRange)?.to?.toISOString() }));
@@ -64,13 +58,12 @@ export default function Page() {
       dispatch(getExpenses({ from: (dateFilter as DateRange)?.from?.toISOString(), to: (dateFilter as DateRange)?.to?.toISOString() }));
       dispatch(getCategories());
     }
-  }, [dispatch]);
+  }, [dispatch, dateFilter]);
 
   useEffect(() => {
     if (!user) {
       dispatch(getUser());
     }
-    setExpenseSelected((prev) => ({ ...prev, user_id: user!.id }));
   }, [user, dispatch]);
 
   const expenseCategories = useMemo(() => categories ? categories.filter(category => category.type === "Expense") : [], [categories]);
@@ -120,16 +113,17 @@ export default function Page() {
   }
 
   const processChartData = (days: number) => {
-    const data = [] as any[];
+    const data = [] as ChartRow[];
     const now = new Date();
 
-    if (!expenseData || !expenseCategories) return;
+    if (!expenseData || !expenseCategories)
+      return { data: [], chartConfig: {}, title: "Expense", description: "Track your expense trend over time." } as ChartData<ChartRow>;
 
     // create base structure (one entry per date)
     for (let i = days; i >= 0; i--) {
       const date = subDays(now, i);
 
-      const entry: any = {
+      const entry: ChartRow = {
         date: format(date, "MMM dd"),
       };
 
@@ -159,11 +153,11 @@ export default function Page() {
       ])
     );
     // update state once
-    setChartData((prev) => ({ ...prev,  data, chartConfig  }));
+    return { data, chartConfig, title: "Expense", description: "Track your expense trend over time." } as ChartData<ChartRow>;
   }
 
-  useMemo(() => {
-    processChartData(Number(range));
+  const chartData = useMemo(() => {
+    return processChartData(Number(range));
   }, [expenseData, range]);
 
   const sumExpense = useMemo(() => {
@@ -203,7 +197,7 @@ export default function Page() {
               </Button>
             </DatePicker>
           </div>
-          <Button variant="ghost" onClick={() => { setOpenExpenseForm(true) }} >
+          <Button variant="ghost" onClick={() => { setExpenseSelected(prev => ({ ...prev, user_id: user?.id || null })); setOpenExpenseForm(true) }} >
             <CirclePlus className="h-6 w-6 cursor-pointer" />
           </Button>
         </div>

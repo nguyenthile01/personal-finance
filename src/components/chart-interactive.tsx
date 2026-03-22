@@ -13,6 +13,9 @@ export interface ChartData<T> {
     title: string,
     description: string
 }
+
+// Generic chart row where keys are column names (e.g. 'date', 'revenues', 'cat_1')
+export type ChartRow = Record<string, number | string>
 const rangeOptions = [
     { label: "1 Week", value: "7" },
     { label: "1 Month", value: "30" },
@@ -21,7 +24,7 @@ const rangeOptions = [
 
 export default function ChartInteractive(
     { range, setRange, chartData, chartHeight = 50 }:
-        { range: string, setRange: (range: string) => void, chartData: ChartData<any>, chartHeight?: number }) {
+        { range: string, setRange: (range: string) => void, chartData: ChartData<ChartRow>, chartHeight?: number }) {
 
     return (
         <Card className="w-full">
