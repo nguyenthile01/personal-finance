@@ -20,8 +20,7 @@ const initialState: RevenueState = {
 };
 
 export const getRevenues = createAsyncThunk<Revenue[], { from?: string, to?: string }>("revenue/get", async (params?: { from?: string, to?: string }) => {
-  try {
-    let query = supabase
+  let query = supabase
       .from('revenues')
       .select(`*, category:categories(*)`);
     if (params?.from && params?.to) {
@@ -30,42 +29,29 @@ export const getRevenues = createAsyncThunk<Revenue[], { from?: string, to?: str
         .lte("revenue_date", params.to)
     }
     const { data, error } = await query.order("revenue_date", { ascending: false });
-    if (error) {
-      throw new Error(error.message);
-    }
+    if (error) throw new Error(error.message);
     return data as unknown as Revenue[];
-  } catch (error) {
-    throw error;
-  }
 });
 
 export const addRevenue = createAsyncThunk<Revenue, Omit<Revenue, "id">>(
   "revenue/add",
   async (newRevenue) => {
-    try {
-      const { data, error } = await supabase
+    const { data, error } = await supabase
         .from("revenues").insert(newRevenue)
         .select(`*, category:categories(*)`)
         .single();
-      if (error) {
-        throw new Error(error.message);
-      }
+      if (error) throw new Error(error.message);
       return data as unknown as Revenue;
-    } catch (error) {
-      throw error;
-    }
   });
 
 export const deleteRevenue = createAsyncThunk<Revenue, number>(
   "revenue/delete",
   async (id) => {
-    try {
-      const { error } = await supabase
+    const { error } = await supabase
         .from("revenues")
         .delete()
         .eq("id", id);
-      if (error)
-        throw new Error(error.message);
+      if (error) throw new Error(error.message);
       return {
         id,
         amount: null,
@@ -75,9 +61,6 @@ export const deleteRevenue = createAsyncThunk<Revenue, number>(
         description: null,
         category: null
       } as unknown as Revenue
-    } catch (error) {
-      throw error;
-    }
   }
 );
 
@@ -121,9 +104,9 @@ const revenueSlice = createSlice({
       state.loading = false;
       state.errors = null;
       state.currentTotal = undefined;
-      state.lastTotal = undefined,
-      state.from = undefined,
-      state.to = undefined
+      state.lastTotal = undefined;
+      state.from = undefined;
+      state.to = undefined;
     }
   },
   extraReducers: (builder: ActionReducerMapBuilder<RevenueState>) => {
