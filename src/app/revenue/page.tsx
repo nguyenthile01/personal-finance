@@ -1,6 +1,6 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useAppDispatch, type RootState } from "@/store";
-import { getRevenues, addRevenue, deleteRevenue } from "@/store/revenue";
+import { getRevenues, addRevenue, deleteRevenue, clearRevenues } from "@/store/revenue";
 import { CirclePlus, Trash } from "lucide-react";
 import { useEffect, useMemo, useState, type ChangeEvent } from "react";
 import { useSelector } from "react-redux";
@@ -12,11 +12,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/date-picker";
 import { Textarea } from "@/components/ui/textarea";
-import { getCategories } from "@/store/category";
+import { clearCategories, getCategories } from "@/store/category";
 import { AppConstant } from "@/interfaces/app-common";
 import { getUser } from "@/store/auth";
 import { type DateRange } from "react-day-picker";
 import { Button } from "@/components/ui/button";
+import { format, isSameDay, subDays } from "date-fns";
+import type { ChartData } from "@/components/chart-interactive";
+import ChartInteractive from "@/components/chart-interactive";
 
 export default function Page() {
   const header = ["category", "amount", "date", "note", ""];
@@ -45,9 +48,22 @@ export default function Page() {
     user_id: null,
     revenue_date: new Date().toISOString(),
   }));
+  const [chartData, setChartData] = useState<ChartData<any>>(() => ({
+    data: [],
+    chartConfig: {},
+    title: "Revenue",
+    description: "Track your revenue trend over time."
+  }));
+  const [range, setRange] = useState<string>("90");
   useEffect(() => {
     dispatch(getRevenues({ from: (dateFilter as DateRange)?.from?.toISOString(), to: (dateFilter as DateRange)?.to?.toISOString() }));
     dispatch(getCategories());
+
+    return () => {
+      // clear slice when leaving the page
+      dispatch(clearRevenues());
+      dispatch(clearCategories());
+    }
   }, [dispatch]);
 
   useEffect(() => {
@@ -55,6 +71,7 @@ export default function Page() {
       dispatch(getUser());
     }
     setRevenueSelected((prev) => ({ ...prev, user_id: user!.id }));
+
   }, [user, dispatch]);
 
   const revenueCategories = useMemo(() => categories ? categories.filter(category => category.type === "Revenue") : [], [categories]);
@@ -103,6 +120,53 @@ export default function Page() {
     });
   }
 
+  const processChartData = (days: number) => {
+    const data = [] as any[];
+    const now = new Date();
+
+    if (!revenueData || !revenueCategories) return;
+
+    // create base structure (one entry per date)
+    for (let i = days; i >= 0; i--) {
+      const date = subDays(now, i);
+
+      const entry: any = {
+        date: format(date, "MMM dd"),
+      };
+
+      // fill each category into same object
+      revenueCategories.forEach((category) => {
+        const total = revenueData
+          .filter(
+            (revenue) =>
+              revenue.category_id === category.id &&
+              isSameDay(new Date(revenue.revenue_date), date)
+          )
+          .reduce((sum, el) => sum + el.amount, 0);
+
+        entry[category.name.toLowerCase()] = total;
+      });
+
+      data.push(entry);
+    }
+    // build chart config ONCE
+    const chartConfig = Object.fromEntries(
+      revenueCategories.map((category, index) => [
+        category.name,
+        {
+          label: category.name,
+          color: `var(--chart-${index + 1})`,
+        },
+      ])
+    );
+    // update state once
+    setChartData((prev) => ({ ...prev, data, chartConfig }));
+  }
+
+  useMemo(() => {
+    processChartData(Number(range));
+  }, [revenueData, range]);
+
   const sumRevenue = useMemo(() => {
     return revenueData?.reduce((accumulator, item) => accumulator + item.amount, 0);
   }, [revenueData])
@@ -135,52 +199,79 @@ export default function Page() {
           <CirclePlus className="h-6 w-6 cursor-pointer" />
         </Button>
       </div>
-      <Table className="overflow-y-auto">
-        <TableHeader>
-          <TableRow>
-            {header.map((head) => (
-              <TableHead key={head}>{head}</TableHead>
-            ))}
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {revenueData && revenueData.length > 0 ? revenueData.map((row, index) => (
-            <TableRow id={row.id} key={index}>
-              <TableCell id="category">{row.category ? row.category.name : "N/A"}</TableCell>
-              <TableCell id="amount">{row.amount} {AppConstant.DATA.DEFAULT_CURRENCY}</TableCell>
-              <TableCell id="revenue_date">{formatDate(row.revenue_date?.toLocaleString()!, "DD/MM/YYYY")}</TableCell>
-              <TableCell id="notes">{row.description}</TableCell>
-              <TableCell className="w-10">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => {
-                    setOpenConfirmDeleteForm(true);
-                    console.log(openConfirmDeleteForm);
-                    setRevenueSelected(row);
-                  }}
-                >
-                  <Trash size={25} className="text-destructive" />
-                </Button>
-              </TableCell>
-            </TableRow>
-          )) : (
+      {/* Table List */}
+      <div id="table">
+        <Table className="table-fixed w-full">
+          <colgroup>
+            <col style={{ width: '35%' }} />
+            <col style={{ width: '20%' }} />
+            <col style={{ width: '20%' }} />
+            <col style={{ width: '15%' }} />
+          </colgroup>
+          <TableHeader>
             <TableRow>
-              <TableCell colSpan={header.length} className="text-center">
-                No revenue data available.
-              </TableCell>
+              {header.map((head) => (
+                <TableHead key={head}>{head}</TableHead>
+              ))}
             </TableRow>
-          )}
-          {revenueData && revenueData.length > 0 && <TableRow>
-            <TableCell colSpan={header.length - 1}>
-              Total revenues
-            </TableCell>
-            <TableCell>
-              {sumRevenue} {AppConstant.DATA.DEFAULT_CURRENCY}
-            </TableCell>
-          </TableRow>}
-        </TableBody>
-      </Table>
+          </TableHeader>
+        </Table>
+        <div className="max-h-[30vh] overflow-y-auto">
+          <Table>
+            <colgroup>
+              <col style={{ width: '35%' }} />
+              <col style={{ width: '20%' }} />
+              <col style={{ width: '20%' }} />
+              <col style={{ width: '15%' }} />
+            </colgroup>
+            <TableBody>
+              {revenueData && revenueData.length > 0 ? revenueData.map((row, index) => (
+                <TableRow id={row.id} key={index}>
+                  <TableCell id="category">{row.category ? row.category.name : "N/A"}</TableCell>
+                  <TableCell id="amount">{row.amount} {AppConstant.DATA.DEFAULT_CURRENCY}</TableCell>
+                  <TableCell id="revenue_date">{formatDate(row.revenue_date?.toLocaleString()!, "DD/MM/YYYY")}</TableCell>
+                  <TableCell id="notes">{row.description}</TableCell>
+                  <TableCell className="w-10">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        setOpenConfirmDeleteForm(true);
+                        console.log(openConfirmDeleteForm);
+                        setRevenueSelected(row);
+                      }}
+                    >
+                      <Trash size={25} className="text-destructive" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              )) : (
+                <TableRow>
+                  <TableCell colSpan={header.length} className="text-center">
+                    No revenue data available.
+                  </TableCell>
+                </TableRow>
+              )}
+              {revenueData && revenueData.length > 0 && <TableRow>
+                <TableCell colSpan={header.length - 1}>
+                  Total revenues
+                </TableCell>
+                <TableCell>
+                  {sumRevenue} {AppConstant.DATA.DEFAULT_CURRENCY}
+                </TableCell>
+              </TableRow>}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
+      <div id="revenue-chart" className="mt-8">
+        {/* Chart */}
+        <ChartInteractive
+          range={range}
+          setRange={setRange}
+          chartData={chartData}
+        ></ChartInteractive>
+      </div>
       {/* Dialog content */}
       {openRevenueForm &&
         <DialogForm

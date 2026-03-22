@@ -53,7 +53,7 @@ const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
-    clearRevenues: (state) => {
+    clearUser: (state) => {
       state.data = null;
       state.loading = false;
       state.errors = null;
@@ -111,5 +111,5 @@ const authSlice = createSlice({
       })
   },
 });
-export const { clearRevenues } = authSlice.actions;
+export const { clearUser } = authSlice.actions;
 export default authSlice.reducer;

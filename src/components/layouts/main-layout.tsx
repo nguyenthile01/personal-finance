@@ -6,7 +6,7 @@ import { Header } from "../header";
 export default function MainLayout() {
   return (
     <div
-      className="font-sans antialiased flex min-h-screen p-2"
+      className="font-sans antialiased flex max-h-screen p-2"
       style={{ fontFamily: "var(--font-inter)" }}
     >
       <SidebarProvider>
