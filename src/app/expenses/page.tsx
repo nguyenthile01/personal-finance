@@ -15,12 +15,11 @@ import { AppConstant } from "@/interfaces/app-common";
 import { getUser } from "@/store/auth";
 import { type DateRange } from "react-day-picker";
 import { Button } from "@/components/ui/button";
-import type { Expense, ExpenseChartData } from "@/interfaces/expense";
+import type { Expense } from "@/interfaces/expense";
 import { addExpense, deleteExpense, getExpenses } from "@/store/expense";
-import { subDays } from "date-fns/subDays";
-import { format } from "date-fns/format";
+import { subDays, format } from "date-fns";
 import type { ChartData } from "@/components/chart-interactive";
-import { isSameDay, set } from "date-fns";
+import { isSameDay } from "date-fns";
 import ChartInteractive from "@/components/chart-interactive";
 
 export default function Page() {
