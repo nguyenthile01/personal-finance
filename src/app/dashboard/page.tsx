@@ -2,16 +2,14 @@ import { useSelector } from "react-redux";
 import SectionCard from "./component/section-card";
 import { useAppDispatch, type RootState } from "@/store";
 import { useEffect, useMemo, useState } from "react";
-import { getExpenses, getExpenseComparision, clearExpense } from "@/store/expense";
-import { clearRevenues, getRevenueComparision, getRevenues } from "@/store/revenue";
+import { getExpenses, clearExpense } from "@/store/expense";
+import { clearRevenues, getRevenues } from "@/store/revenue";
 import type { DateRange } from "react-day-picker";
-import { format, isSameDay, subDays } from "date-fns";
+import { format, isSameDay, subDays, startOfMonth, endOfMonth, subMonths } from "date-fns";
 import type { ChartData, ChartRow } from "@/components/chart-interactive";
 import ChartInteractive from "@/components/chart-interactive";
 
 export default function Page() {
-    const { currentTotal: currentRevenuesSum, lastTotal: lastRevenuesSum } = useSelector((state: RootState) => state.revenue);
-    const { currentTotal: currentExpensesSum, lastTotal: lastExpensesSum } = useSelector((state: RootState) => state.expense);
     const { data: revenues } = useSelector((state: RootState) => state.revenue);
     const { data: expenses } = useSelector((state: RootState) => state.expense);
     // chart rows have a date plus named numeric series (revenues/expenses)
@@ -34,12 +32,57 @@ export default function Page() {
             return 0;
         }
     }
+
+    // compute current and last totals by calendar month
+    const currentRevenuesSum = useMemo(() => {
+        if (!revenues) return 0;
+        const now = new Date();
+        const from = startOfMonth(now);
+        const to = endOfMonth(now);
+        return revenues.reduce((sum, r) => {
+            const d = new Date(r.revenue_date);
+            return d >= from && d <= to ? sum + (r.amount || 0) : sum;
+        }, 0);
+    }, [revenues]);
+
+    const lastRevenuesSum = useMemo(() => {
+        if (!revenues) return 0;
+        const now = new Date();
+        const prev = subMonths(now, 1);
+        const from = startOfMonth(prev);
+        const to = endOfMonth(prev);
+        return revenues.reduce((sum, r) => {
+            const d = new Date(r.revenue_date);
+            return d >= from && d <= to ? sum + (r.amount || 0) : sum;
+        }, 0);
+    }, [revenues]);
+
+    const currentExpensesSum = useMemo(() => {
+        if (!expenses) return 0;
+        const now = new Date();
+        const from = startOfMonth(now);
+        const to = endOfMonth(now);
+        return expenses.reduce((sum, e) => {
+            const d = new Date(e.expense_date);
+            return d >= from && d <= to ? sum + (e.amount || 0) : sum;
+        }, 0);
+    }, [expenses]);
+
+    const lastExpensesSum = useMemo(() => {
+        if (!expenses) return 0;
+        const now = new Date();
+        const prev = subMonths(now, 1);
+        const from = startOfMonth(prev);
+        const to = endOfMonth(prev);
+        return expenses.reduce((sum, e) => {
+            const d = new Date(e.expense_date);
+            return d >= from && d <= to ? sum + (e.amount || 0) : sum;
+        }, 0);
+    }, [expenses]);
     // dateFilter is derived from range via useMemo; no need to set state here
     useEffect(() => {
         dispatch(getRevenues({ from: dateFilter.from?.toISOString(), to: dateFilter.to?.toISOString() }));
         dispatch(getExpenses({ from: dateFilter.from?.toISOString(), to: dateFilter.to?.toISOString() }));
-        dispatch(getExpenseComparision());
-        dispatch(getRevenueComparision());
 
         return () => {
             // clear slice when leaving the page
@@ -81,13 +124,13 @@ export default function Page() {
                     name="Revenues"
                     description={"Total Revenues"}
                     title={currentRevenuesSum?.toString() || "0"}
-                    percentage={percentage(currentRevenuesSum!, lastRevenuesSum!)}
-                    url="/expenses" />
+                    percentage={percentage(currentRevenuesSum, lastRevenuesSum)}
+                    url="/revenue" />
                 <SectionCard
                     name="Expenses"
                     description={"Total Expenses"}
                     title={currentExpensesSum?.toString() || "0"}
-                    percentage={percentage(currentExpensesSum!, lastExpensesSum!)}
+                    percentage={percentage(currentExpensesSum, lastExpensesSum)}
                     url="/expenses" />
             </div>
             <div id="expense-chart" className="mt-8">

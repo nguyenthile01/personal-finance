@@ -4,8 +4,6 @@ import supabase from "@/lib/supabase";
 import { createAsyncThunk, createSlice, type ActionReducerMapBuilder } from "@reduxjs/toolkit";
 
 interface ExpenseState extends State<Expense[]> {
-  currentTotal?: number,
-  lastTotal?: number,
   from?: string,
   to?: string
 }
@@ -14,38 +12,36 @@ const initialState: ExpenseState = {
   data: null,
   loading: false,
   errors: null,
-  currentTotal: undefined,
-  lastTotal: undefined,
   from: undefined,
   to: undefined
 }
 
 export const getExpenses = createAsyncThunk<Expense[], { from?: string, to?: string }>("expense/getByCondition", async (params?: { from?: string, to?: string }) => {
   let query = supabase
-      .from("expenses")
-      .select(`*, category:categories(*)`);
-    if (params?.from && params?.to) {
-      query = query
-        .gte("expense_date", params.from)
-        .lte("expense_date", params.to);
-    }
+    .from("expenses")
+    .select(`*, category:categories(*)`);
+  if (params?.from && params?.to) {
+    query = query
+      .gte("expense_date", params.from)
+      .lte("expense_date", params.to);
+  }
 
-    const { data, error } = await query.order("expense_date", { ascending: false });
+  const { data, error } = await query.order("expense_date", { ascending: false });
 
-    if (error) throw new Error(error.message);
-    return data as Expense[];
+  if (error) throw new Error(error.message);
+  return data as Expense[];
 });
 
 export const addExpense = createAsyncThunk<Expense, Omit<Expense, "id">>(
   "expense/add",
   async (newExpense) => {
     const { data, error } = await supabase
-        .from("expenses")
-        .insert(newExpense)
-        .select(`*, category:categories(*)`)
-        .single();
-      if (error) throw new Error(error.message);
-      return data as Expense;
+      .from("expenses")
+      .insert(newExpense)
+      .select(`*, category:categories(*)`)
+      .single();
+    if (error) throw new Error(error.message);
+    return data as Expense;
   }
 );
 
@@ -53,19 +49,19 @@ export const deleteExpense = createAsyncThunk<Expense, number>(
   `expense/delete`,
   async (id) => {
     const { error } = await supabase
-        .from("expense")
-        .delete()
-        .eq("id", id);
-      if (error) throw new Error(error.message);
-      return {
-        id,
-        amount: null,
-        category_id: null,
-        expense_date: null,
-        user_id: null,
-        description: null,
-        category: null
-      } as unknown as Expense
+      .from("expense")
+      .delete()
+      .eq("id", id);
+    if (error) throw new Error(error.message);
+    return {
+      id,
+      amount: null,
+      category_id: null,
+      expense_date: null,
+      user_id: null,
+      description: null,
+      category: null
+    } as unknown as Expense
   }
 );
 
@@ -108,8 +104,6 @@ const expenseSlice = createSlice({
       state.data = null;
       state.loading = false;
       state.errors = null;
-      state.currentTotal = undefined;
-      state.lastTotal = undefined;
       state.from = undefined;
       state.to = undefined;
     }
@@ -122,9 +116,17 @@ const expenseSlice = createSlice({
       })
       .addCase(addExpense.fulfilled, (state, action) => {
         const expense = action.payload;
-        const matchFilter = (state.from && state.to) ? (new Date(expense.expense_date) >= new Date(state.from) && new Date(expense.expense_date) <= new Date(state.to)) : true;
-        if (matchFilter)
+        const matchFilter = (state.from && state.to) ?
+          (new Date(expense.expense_date) >= new Date(state.from) && new Date(expense.expense_date) <= new Date(state.to)) :
+          true;
+        if (matchFilter) {
           state.data?.push(action.payload);
+          // sort descending by date
+          state.data?.sort(
+            (a, b) => new Date(b.expense_date).getTime() - new Date(a.expense_date).getTime()
+          );
+        }
+
         state.loading = false;
         state.errors = null;
       })
@@ -166,8 +168,6 @@ const expenseSlice = createSlice({
       })
       .addCase(getExpenseComparision.fulfilled, (state, action) => {
         state.loading = false;
-        state.currentTotal = action.payload.currentTotal;
-        state.lastTotal = action.payload.lastTotal;
         state.errors = null;
       })
       .addCase(getExpenseComparision.rejected, (state, action) => {

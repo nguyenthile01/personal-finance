@@ -4,8 +4,6 @@ import { supabase } from "@/lib/supabase";
 import type { State } from "@/interfaces/app-common";
 
 interface RevenueState extends State<Revenue[]> {
-  currentTotal?: number,
-  lastTotal?: number,
   from?: string,
   to?: string
 }
@@ -13,54 +11,52 @@ const initialState: RevenueState = {
   data: null,
   loading: false,
   errors: null,
-  currentTotal: undefined,
-  lastTotal: undefined,
   from: undefined,
   to: undefined
 };
 
 export const getRevenues = createAsyncThunk<Revenue[], { from?: string, to?: string }>("revenue/get", async (params?: { from?: string, to?: string }) => {
   let query = supabase
-      .from('revenues')
-      .select(`*, category:categories(*)`);
-    if (params?.from && params?.to) {
-      query = query
-        .gte("revenue_date", params.from)
-        .lte("revenue_date", params.to)
-    }
-    const { data, error } = await query.order("revenue_date", { ascending: false });
-    if (error) throw new Error(error.message);
-    return data as unknown as Revenue[];
+    .from('revenues')
+    .select(`*, category:categories(*)`);
+  if (params?.from && params?.to) {
+    query = query
+      .gte("revenue_date", params.from)
+      .lte("revenue_date", params.to)
+  }
+  const { data, error } = await query.order("revenue_date", { ascending: false });
+  if (error) throw new Error(error.message);
+  return data as unknown as Revenue[];
 });
 
 export const addRevenue = createAsyncThunk<Revenue, Omit<Revenue, "id">>(
   "revenue/add",
   async (newRevenue) => {
     const { data, error } = await supabase
-        .from("revenues").insert(newRevenue)
-        .select(`*, category:categories(*)`)
-        .single();
-      if (error) throw new Error(error.message);
-      return data as unknown as Revenue;
+      .from("revenues").insert(newRevenue)
+      .select(`*, category:categories(*)`)
+      .single();
+    if (error) throw new Error(error.message);
+    return data as unknown as Revenue;
   });
 
 export const deleteRevenue = createAsyncThunk<Revenue, number>(
   "revenue/delete",
   async (id) => {
     const { error } = await supabase
-        .from("revenues")
-        .delete()
-        .eq("id", id);
-      if (error) throw new Error(error.message);
-      return {
-        id,
-        amount: null,
-        category_id: null,
-        revenue_date: null,
-        user_id: null,
-        description: null,
-        category: null
-      } as unknown as Revenue
+      .from("revenues")
+      .delete()
+      .eq("id", id);
+    if (error) throw new Error(error.message);
+    return {
+      id,
+      amount: null,
+      category_id: null,
+      revenue_date: null,
+      user_id: null,
+      description: null,
+      category: null
+    } as unknown as Revenue
   }
 );
 
@@ -103,8 +99,6 @@ const revenueSlice = createSlice({
       state.data = null;
       state.loading = false;
       state.errors = null;
-      state.currentTotal = undefined;
-      state.lastTotal = undefined;
       state.from = undefined;
       state.to = undefined;
     }
@@ -132,8 +126,13 @@ const revenueSlice = createSlice({
       .addCase(addRevenue.fulfilled, (state, action) => {
         const revenue = action.payload;
         const matchFilter = (state.from && state.to) ? (new Date(revenue.revenue_date) >= new Date(state.from) && new Date(revenue.revenue_date) <= new Date(state.to)) : true;
-        if (matchFilter)
+        if (matchFilter) {
           state.data?.push(action.payload);
+          // sort descending by date
+          state.data?.sort(
+            (a, b) => new Date(b.revenue_date).getTime() - new Date(a.revenue_date).getTime()
+          );
+        }
         state.loading = false;
       })
       .addCase(addRevenue.rejected, (state, action) => {
@@ -158,13 +157,11 @@ const revenueSlice = createSlice({
       })
       .addCase(getRevenueComparision.fulfilled, (state, action) => {
         state.loading = false;
-        state.currentTotal = action.payload.currentTotal;
-        state.lastTotal = action.payload.lastTotal;
         state.errors = null;
       })
       .addCase(getRevenueComparision.rejected, (state, action) => {
         state.loading = false;
-        state.errors = [action.error.message || "Failed to get comparision expense"];
+        state.errors = [action.error.message || "Failed to get comparision revenue"];
       })
   }
 });
