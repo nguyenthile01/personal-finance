@@ -52,11 +52,11 @@ export default function Page() {
     category_id: 0,
     category: null,
     user_id: null,
-    revenue_date: new Date().toISOString(),
+    revenue_date: new Date().toLocaleString(),
   }));
   const [range, setRange] = useState<string>("90");
   useEffect(() => {
-    dispatch(getRevenues({ from: (dateFilter as DateRange)?.from?.toISOString(), to: (dateFilter as DateRange)?.to?.toISOString(), page, pageSize }));
+    dispatch(getRevenues({ from: (dateFilter as DateRange)?.from?.toLocaleString(), to: (dateFilter as DateRange)?.to?.toLocaleString(), page, pageSize }));
     dispatch(getCategories());
 
     return () => {
@@ -68,7 +68,7 @@ export default function Page() {
 
   useEffect(() => {
     // refetch when pagination changes
-    dispatch(getRevenues({ from: (dateFilter as DateRange)?.from?.toISOString(), to: (dateFilter as DateRange)?.to?.toISOString(), page, pageSize }));
+    dispatch(getRevenues({ from: (dateFilter as DateRange)?.from?.toLocaleString(), to: (dateFilter as DateRange)?.to?.toLocaleString(), page, pageSize }));
   }, [dispatch, page, pageSize]);
 
   useEffect(() => {
@@ -82,7 +82,6 @@ export default function Page() {
   const handleAddRevenue = async () => {
     if (!revenueSelected) return;
     const { id, category, ...payload } = revenueSelected;
-    console.log("Submitting revenue:", payload);
     try {
       await dispatch(addRevenue(payload)).unwrap();
       setOpenRevenueForm(false);
@@ -92,7 +91,7 @@ export default function Page() {
         category_id: 0,
         category: null,
         user_id: user?.id || null,
-        revenue_date: new Date().toISOString(),
+        revenue_date: new Date().toLocaleString(),
         description: "" // Ensure this is cleared
       });
     } catch (error) {
@@ -119,7 +118,7 @@ export default function Page() {
       category_id: 0,
       category: null,
       user_id: user?.id || null,
-      revenue_date: new Date().toISOString(),
+      revenue_date: new Date().toLocaleString(),
       description: "" // Ensure this is cleared
     });
   }
@@ -186,7 +185,7 @@ export default function Page() {
     // dispatch action to update page in the store
     dispatch(setPage(newPage));
     // this will trigger useEffect to refetch data for the new page
-    dispatch(getRevenues({ from: (dateFilter as DateRange)?.from?.toISOString(), to: (dateFilter as DateRange)?.to?.toISOString(), page: newPage, pageSize }));
+    dispatch(getRevenues({ from: (dateFilter as DateRange)?.from?.toLocaleString(), to: (dateFilter as DateRange)?.to?.toLocaleString(), page: newPage, pageSize }));
   }
 
   return (
@@ -199,7 +198,7 @@ export default function Page() {
             max={31}
             setDate={(date) => {
               setDateFilter(date);
-              dispatch(getRevenues({ from: (date as DateRange)?.from?.toISOString(), to: (date as DateRange)?.to?.toISOString() }));
+              dispatch(getRevenues({ from: (date as DateRange)?.from?.toLocaleString(), to: (date as DateRange)?.to?.toLocaleString() }));
             }}
           >
             <Button
@@ -255,7 +254,6 @@ export default function Page() {
                       size="icon"
                       onClick={() => {
                         setOpenConfirmDeleteForm(true);
-                        console.log(openConfirmDeleteForm);
                         setRevenueSelected(row);
                       }}
                     >
@@ -297,6 +295,7 @@ export default function Page() {
           range={range}
           setRange={setRange}
           chartData={chartData}
+          type="bar"
         ></ChartInteractive>
       </div>
       {/* Dialog content */}
@@ -337,7 +336,7 @@ export default function Page() {
             <DatePicker
               mode="single"
               date={revenueSelected?.revenue_date ? new Date(revenueSelected.revenue_date) : new Date()}
-              setDate={(date) => updateField("revenue_date", (date as Date)!.toISOString())}
+              setDate={(date) => updateField("revenue_date", (date as Date).toLocaleString())}
             />
           </div>
           <div id="description" className="mb-1">

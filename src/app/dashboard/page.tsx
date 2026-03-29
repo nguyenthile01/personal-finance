@@ -81,8 +81,8 @@ export default function Page() {
     }, [expenses]);
     // dateFilter is derived from range via useMemo; no need to set state here
     useEffect(() => {
-        dispatch(getRevenues({ from: dateFilter.from?.toISOString(), to: dateFilter.to?.toISOString(), page: 1, pageSize: 1000 }));
-        dispatch(getExpenses({ from: dateFilter.from?.toISOString(), to: dateFilter.to?.toISOString(), page: 1, pageSize: 1000 }));
+        dispatch(getRevenues({ from: dateFilter.from?.toLocaleString(), to: dateFilter.to?.toLocaleString(), page: 1, pageSize: 1000 }));
+        dispatch(getExpenses({ from: dateFilter.from?.toLocaleString(), to: dateFilter.to?.toLocaleString(), page: 1, pageSize: 1000 }));
 
         return () => {
             // clear slice when leaving the page
@@ -114,7 +114,7 @@ export default function Page() {
             expenses: { label: "Expenses", color: "var(--chart-2)" },
         };
 
-        return { data, chartConfig, title: "Expense", description: "Track your expense trend over time." };
+        return { data, chartConfig, title: "", description: "" };
     }, [revenues, expenses, range]);
     return (
         <main>
@@ -139,6 +139,7 @@ export default function Page() {
                     range={range}
                     setRange={setRange}
                     chartData={chartData}
+                    type="line"
                 ></ChartInteractive>
             </div>
         </main>

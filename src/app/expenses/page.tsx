@@ -48,16 +48,16 @@ export default function Page() {
     category_id: 0,
     category: null,
     user_id: null,
-    expense_date: new Date().toISOString(),
+    expense_date: new Date().toLocaleString(),
   }));
   const [range, setRange] = useState<string>("90");
   const { page, pageSize, total } = useSelector((state: RootState) => state.expense);
   useEffect(() => {
-    dispatch(getExpenses({ from: (dateFilter as DateRange)?.from?.toISOString(), to: (dateFilter as DateRange)?.to?.toISOString() }));
+    dispatch(getExpenses({ from: (dateFilter as DateRange)?.from?.toLocaleString(), to: (dateFilter as DateRange)?.to?.toLocaleString() }));
     dispatch(getCategories());
     return () => {
       // clear slice when leaving the page
-      dispatch(getExpenses({ from: (dateFilter as DateRange)?.from?.toISOString(), to: (dateFilter as DateRange)?.to?.toISOString() }));
+      dispatch(getExpenses({ from: (dateFilter as DateRange)?.from?.toLocaleString(), to: (dateFilter as DateRange)?.to?.toLocaleString() }));
       dispatch(getCategories());
     }
   }, [dispatch, dateFilter]);
@@ -82,7 +82,7 @@ export default function Page() {
         category_id: 0,
         category: null,
         user_id: user?.id || null,
-        expense_date: new Date().toISOString(),
+        expense_date: new Date().toLocaleString(),
         description: "" // Ensure this is cleared
       });
     } catch (error) {
@@ -109,7 +109,7 @@ export default function Page() {
       category_id: 0,
       category: null,
       user_id: user?.id || null,
-      expense_date: new Date().toISOString(),
+      expense_date: new Date().toLocaleString(),
       description: "" // Ensure this is cleared
     });
   }
@@ -173,7 +173,7 @@ export default function Page() {
 
   const onChangePage = (page: number) => {
     dispatch(setPage(page));
-    dispatch(getExpenses({ from: (dateFilter as DateRange)?.from?.toISOString(), to: (dateFilter as DateRange)?.to?.toISOString(), page, pageSize }));
+    dispatch(getExpenses({ from: (dateFilter as DateRange)?.from?.toLocaleString(), to: (dateFilter as DateRange)?.to?.toLocaleString(), page, pageSize }));
   }
 
   return (
@@ -191,8 +191,8 @@ export default function Page() {
                 if (range?.from && range.to) {
                   dispatch(getExpenses(
                     {
-                      from: range?.from?.toISOString(),
-                      to: range?.to?.toISOString()
+                      from: range?.from?.toLocaleString(),
+                      to: range?.to?.toLocaleString()
                     }
                   ));
                 }
@@ -253,7 +253,6 @@ export default function Page() {
                       size="icon"
                       onClick={() => {
                         setOpenConfirmDeleteForm(true);
-                        console.log(openConfirmDeleteForm);
                         setExpenseSelected(row);
                       }}
                     >
@@ -284,6 +283,7 @@ export default function Page() {
           range={range}
           setRange={setRange}
           chartData={chartData}
+          type="bar"
         ></ChartInteractive>
       </div>
       {/* Dialog content */}
@@ -325,7 +325,7 @@ export default function Page() {
             <DatePicker
               mode="single"
               date={expenseSelected?.expense_date ? new Date(expenseSelected.expense_date) : new Date()}
-              setDate={(date) => updateField("expense_date", (date as Date)!.toISOString())}
+              setDate={(date) => updateField("expense_date", (date as Date)!.toLocaleString())}
             />
           </div>
           <div id="description" className="mb-1">

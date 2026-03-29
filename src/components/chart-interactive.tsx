@@ -5,7 +5,7 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } f
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { GitCommitHorizontal } from "lucide-react";
-import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
 
 export interface ChartData<T> {
     data: T[],
@@ -23,8 +23,8 @@ const rangeOptions = [
 ]
 
 export default function ChartInteractive(
-    { range, setRange, chartData, chartHeight = 50 }:
-        { range: string, setRange: (range: string) => void, chartData: ChartData<ChartRow>, chartHeight?: number }) {
+    { range, setRange, chartData, chartHeight = 50, type = 'line' }:
+        { range: string, setRange: (range: string) => void, chartData: ChartData<ChartRow>, chartHeight?: number, type: 'line' | 'bar' }) {
 
     return (
         <Card className="w-full">
@@ -44,7 +44,7 @@ export default function ChartInteractive(
                 </Tabs>
             </CardHeader>
             <CardContent>
-                <ChartContainer config={chartData.chartConfig} className={cn("w-full", chartHeight ? `max-h-[${chartHeight}vh]` : "max-h-[50vh]")}>
+                {type === 'line' && <ChartContainer config={chartData.chartConfig} className={cn("w-full", chartHeight ? `max-h-[${chartHeight}vh]` : "max-h-[50vh]")}>
                     {/* Line Chart */}
                     <LineChart
                         data={chartData.data}
@@ -68,7 +68,32 @@ export default function ChartInteractive(
                             />
                         ))}
                     </LineChart>
+
                 </ChartContainer>
+                }
+                {/* Bar Chart */}
+                {type === 'bar' &&
+                    <ChartContainer config={chartData.chartConfig} className={cn("w-full", chartHeight ? `max-h-[${chartHeight}vh]` : "max-h-[50vh]")}>
+                        <BarChart accessibilityLayer data={chartData.data}>
+                            <XAxis 
+                                dataKey="date" 
+                                tickLine={false}
+                                axisLine={false}
+                                tickMargin={8}
+                                minTickGap={32} />
+                            <YAxis hide />
+                            <CartesianGrid vertical={true} strokeDasharray="4 4" opacity={0.4} />
+                            <ChartTooltip content={<ChartTooltipContent />} />
+                            {Object.entries(chartData.chartConfig).map(([key, value]) => (
+                                <Bar
+                                    key={key}
+                                    dataKey={String(value?.label ?? key).toLowerCase()} // Assuming the dataKey in chartData matches the label in chartConfig
+                                    fill={value.color} // Use a hex code instead of var()
+                                />
+                            ))}
+                        </BarChart>
+                    </ChartContainer>
+                }
             </CardContent>
             <CardFooter className="flex flex-wrap gap-2">
                 {Object.entries(chartData.chartConfig).map(([key, value]) => (
