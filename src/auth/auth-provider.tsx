@@ -11,8 +11,6 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log("Auth Event:", session);
-      console.log("Auth User:", user);
       switch (event) {
         case 'SIGNED_IN':
         case 'INITIAL_SESSION':
@@ -27,7 +25,6 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
           break;
 
         case 'TOKEN_REFRESHED':
-          console.log("Token refreshed");
           break;
       }
     });

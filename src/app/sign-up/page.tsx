@@ -31,7 +31,6 @@ export default function SignUp() {
             // TODO: proceed after successful signup (e.g. redirect)
         } catch (error) {
             setErrorDialogOpen(true);
-            console.error("Sign up error:", error);
         }
     };
 
