@@ -16,11 +16,12 @@ import { getUser } from "@/store/auth";
 import { type DateRange } from "react-day-picker";
 import { Button } from "@/components/ui/button";
 import type { Expense } from "@/interfaces/expense";
-import { addExpense, deleteExpense, getExpenses } from "@/store/expense";
+import { addExpense, deleteExpense, getExpenses, setPage } from "@/store/expense";
 import { subDays, format } from "date-fns";
 import type { ChartData, ChartRow } from "@/components/chart-interactive";
 import { isSameDay } from "date-fns";
 import ChartInteractive from "@/components/chart-interactive";
+import { PaginationInteractive } from "@/components/pagination-interactive";
 
 export default function Page() {
   const header = ["category", "amount", "date", "note", ""];
@@ -50,6 +51,7 @@ export default function Page() {
     expense_date: new Date().toISOString(),
   }));
   const [range, setRange] = useState<string>("90");
+  const { page, pageSize, total } = useSelector((state: RootState) => state.expense);
   useEffect(() => {
     dispatch(getExpenses({ from: (dateFilter as DateRange)?.from?.toISOString(), to: (dateFilter as DateRange)?.to?.toISOString() }));
     dispatch(getCategories());
@@ -112,6 +114,10 @@ export default function Page() {
     });
   }
 
+  const sumExpense = useMemo(() => {
+    return (expenseData ?? []).reduce((accumulator, item) => accumulator + (item.amount || 0), 0);
+  }, [expenseData])
+
   const processChartData = (days: number) => {
     const data = [] as ChartRow[];
     const now = new Date();
@@ -153,16 +159,22 @@ export default function Page() {
       ])
     );
     // update state once
-    return { data, chartConfig, title: "Expense", description: "Track your expense trend over time." } as ChartData<ChartRow>;
+    return {
+      data,
+      chartConfig,
+      title: "Expense",
+      description: `Total expense: ${AppConstant.DATA.DEFAULT_CURRENCY.symbol}${sumExpense}`
+    } as ChartData<ChartRow>;
   }
 
   const chartData = useMemo(() => {
     return processChartData(Number(range));
   }, [expenseData, range]);
 
-  const sumExpense = useMemo(() => {
-    return (expenseData ?? []).reduce((accumulator, item) => accumulator + (item.amount || 0), 0);
-  }, [expenseData])
+  const onChangePage = (page: number) => {
+    dispatch(setPage(page));
+    dispatch(getExpenses({ from: (dateFilter as DateRange)?.from?.toISOString(), to: (dateFilter as DateRange)?.to?.toISOString(), page, pageSize }));
+  }
 
   return (
     <main>
@@ -232,7 +244,7 @@ export default function Page() {
               {expenseData && expenseData.length > 0 ? expenseData.map((row) => (
                 <TableRow id={row.id} key={row.id}>
                   <TableCell id="category">{row.category ? row.category.name : "N/A"}</TableCell>
-                  <TableCell id="amount">{row.amount} {AppConstant.DATA.DEFAULT_CURRENCY}</TableCell>
+                  <TableCell id="amount">{row.amount} {AppConstant.DATA.DEFAULT_CURRENCY.code}</TableCell>
                   <TableCell id="expense_date">{formatDate(row.expense_date?.toLocaleString()!, "DD/MM/YYYY")}</TableCell>
                   <TableCell id="notes">{row.description}</TableCell>
                   <TableCell className="w-10">
@@ -259,10 +271,12 @@ export default function Page() {
             </TableBody>
           </Table>
         </div>
-        <div className="flex justify-between mt-2">
-          <p className="px-2">Total expenses:</p>
-          <p className="px-2">{sumExpense} {AppConstant.DATA.DEFAULT_CURRENCY}</p>
-        </div>
+        <PaginationInteractive
+          page={page}
+          pageSize={pageSize}
+          total={total}
+          onPageChange={onChangePage}
+        ></PaginationInteractive>
       </div>
       <div id="expense-chart" className="mt-8">
         {/* Chart */}

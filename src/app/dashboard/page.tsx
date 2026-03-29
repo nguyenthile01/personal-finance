@@ -81,8 +81,8 @@ export default function Page() {
     }, [expenses]);
     // dateFilter is derived from range via useMemo; no need to set state here
     useEffect(() => {
-        dispatch(getRevenues({ from: dateFilter.from?.toISOString(), to: dateFilter.to?.toISOString() }));
-        dispatch(getExpenses({ from: dateFilter.from?.toISOString(), to: dateFilter.to?.toISOString() }));
+        dispatch(getRevenues({ from: dateFilter.from?.toISOString(), to: dateFilter.to?.toISOString(), page: 1, pageSize: 1000 }));
+        dispatch(getExpenses({ from: dateFilter.from?.toISOString(), to: dateFilter.to?.toISOString(), page: 1, pageSize: 1000 }));
 
         return () => {
             // clear slice when leaving the page

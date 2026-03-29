@@ -5,29 +5,46 @@ import type { State } from "@/interfaces/app-common";
 
 interface RevenueState extends State<Revenue[]> {
   from?: string,
-  to?: string
+  to?: string,
+  page: number,
+  pageSize: number,
+  total: number
 }
 const initialState: RevenueState = {
-  data: null,
+  data: [],
   loading: false,
   errors: null,
   from: undefined,
-  to: undefined
+  to: undefined,
+  page: 1,
+  pageSize: 30,
+  total: 0
 };
 
-export const getRevenues = createAsyncThunk<Revenue[], { from?: string, to?: string }>("revenue/get", async (params?: { from?: string, to?: string }) => {
-  let query = supabase
-    .from('revenues')
-    .select(`*, category:categories(*)`);
-  if (params?.from && params?.to) {
-    query = query
-      .gte("revenue_date", params.from)
-      .lte("revenue_date", params.to)
+export const getRevenues = createAsyncThunk<{ rows: Revenue[]; count: number }, { from?: string, to?: string, page?: number, pageSize?: number }>(
+  "revenue/get",
+  async (params?: { from?: string, to?: string, page?: number, pageSize?: number }) => {
+    const page = params?.page ?? 1;
+    const pageSize = params?.pageSize ?? 10;
+    const start = (page - 1) * pageSize;
+    const end = page * pageSize - 1;
+
+    let query = supabase
+      .from('revenues')
+      .select(`*, category:categories(*)`, { count: 'exact' });
+
+    if (params?.from && params?.to) {
+      query = query
+        .gte("revenue_date", params.from)
+        .lte("revenue_date", params.to);
+    }
+
+    // apply pagination range
+    const { data, error, count } = await query.order("revenue_date", { ascending: false }).range(start, end);
+    if (error) throw new Error(error.message);
+    return { rows: data as unknown as Revenue[], count: count ?? 0 };
   }
-  const { data, error } = await query.order("revenue_date", { ascending: false });
-  if (error) throw new Error(error.message);
-  return data as unknown as Revenue[];
-});
+);
 
 export const addRevenue = createAsyncThunk<Revenue, Omit<Revenue, "id">>(
   "revenue/add",
@@ -101,6 +118,12 @@ const revenueSlice = createSlice({
       state.errors = null;
       state.from = undefined;
       state.to = undefined;
+    },
+    setPage: (state, action) => {
+      state.page = action.payload;
+    },
+    setPageSize: (state, action) => {
+      state.pageSize = action.payload;
     }
   },
   extraReducers: (builder: ActionReducerMapBuilder<RevenueState>) => {
@@ -110,10 +133,11 @@ const revenueSlice = createSlice({
         state.errors = null;
       })
       .addCase(getRevenues.fulfilled, (state, action) => {
-        state.data = action.payload;
+        state.data = action.payload.rows;
         state.loading = false;
         state.from = action.meta.arg.from;
         state.to = action.meta.arg.to;
+        state.total = action.payload.count;
       })
       .addCase(getRevenues.rejected, (state, action) => {
         state.loading = false;
@@ -155,7 +179,7 @@ const revenueSlice = createSlice({
         state.loading = true;
         state.errors = null;
       })
-      .addCase(getRevenueComparision.fulfilled, (state, action) => {
+      .addCase(getRevenueComparision.fulfilled, (state) => {
         state.loading = false;
         state.errors = null;
       })
@@ -166,5 +190,5 @@ const revenueSlice = createSlice({
   }
 });
 
-export const { clearRevenues } = revenueSlice.actions;
+export const { clearRevenues, setPage, setPageSize } = revenueSlice.actions;
 export default revenueSlice.reducer;

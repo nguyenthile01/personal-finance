@@ -12,7 +12,7 @@ export default function SectionCard({ name, description, title, percentage, url,
         <Card className={className}>
             <CardHeader>
                 <CardDescription>{description}</CardDescription>
-                <CardTitle>{title} {AppConstant.DATA.DEFAULT_CURRENCY}</CardTitle>
+                <CardTitle>{title} {AppConstant.DATA.DEFAULT_CURRENCY.code}</CardTitle>
                 <CardAction>
                     <Badge variant={"outline"}>
                         {

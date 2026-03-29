@@ -1,6 +1,6 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useAppDispatch, type RootState } from "@/store";
-import { getRevenues, addRevenue, deleteRevenue, clearRevenues } from "@/store/revenue";
+import { getRevenues, addRevenue, deleteRevenue, clearRevenues, setPage } from "@/store/revenue";
 import { CirclePlus, Trash } from "lucide-react";
 import { useEffect, useMemo, useState, type ChangeEvent } from "react";
 import { useSelector } from "react-redux";
@@ -20,11 +20,17 @@ import { Button } from "@/components/ui/button";
 import { format, isSameDay, subDays } from "date-fns";
 import type { ChartRow } from "@/components/chart-interactive";
 import ChartInteractive from "@/components/chart-interactive";
+import { PaginationInteractive } from "@/components/pagination-interactive";
 
 export default function Page() {
   const header = ["category", "amount", "date", "note", ""];
   const dispatch = useAppDispatch();
   const { data: revenueData } = useSelector((state: RootState) => state.revenue);
+  const { page, pageSize, total } = useSelector((state: RootState) => ({
+    page: state.revenue.page,
+    pageSize: state.revenue.pageSize,
+    total: state.revenue.total,
+  }));
   const { data: categories } = useSelector((state: RootState) => state.categories);
   const { data: user } = useSelector((state: RootState) => state.auth);
   const [openRevenueForm, setOpenRevenueForm] = useState<boolean>(false);
@@ -50,7 +56,7 @@ export default function Page() {
   }));
   const [range, setRange] = useState<string>("90");
   useEffect(() => {
-    dispatch(getRevenues({ from: (dateFilter as DateRange)?.from?.toISOString(), to: (dateFilter as DateRange)?.to?.toISOString() }));
+    dispatch(getRevenues({ from: (dateFilter as DateRange)?.from?.toISOString(), to: (dateFilter as DateRange)?.to?.toISOString(), page, pageSize }));
     dispatch(getCategories());
 
     return () => {
@@ -59,6 +65,11 @@ export default function Page() {
       dispatch(clearCategories());
     }
   }, [dispatch, dateFilter]);
+
+  useEffect(() => {
+    // refetch when pagination changes
+    dispatch(getRevenues({ from: (dateFilter as DateRange)?.from?.toISOString(), to: (dateFilter as DateRange)?.to?.toISOString(), page, pageSize }));
+  }, [dispatch, page, pageSize]);
 
   useEffect(() => {
     if (!user) {
@@ -73,7 +84,7 @@ export default function Page() {
     const { id, category, ...payload } = revenueSelected;
     console.log("Submitting revenue:", payload);
     try {
-      await dispatch(addRevenue(payload));
+      await dispatch(addRevenue(payload)).unwrap();
       setOpenRevenueForm(false);
       setRevenueSelected({
         id: "",
@@ -100,7 +111,7 @@ export default function Page() {
 
   const handleDeleteRevenue = async () => {
     if (!revenueSelected.id) return;
-    await dispatch(deleteRevenue(Number(revenueSelected.id)));
+    await dispatch(deleteRevenue(Number(revenueSelected.id))).unwrap();
     setOpenConfirmDeleteForm(false);
     setRevenueSelected({
       id: "",
@@ -112,6 +123,10 @@ export default function Page() {
       description: "" // Ensure this is cleared
     });
   }
+
+  const sumRevenue = useMemo(() => {
+    return revenueData?.reduce((accumulator, item) => accumulator + item.amount, 0);
+  }, [revenueData])
 
   const processChartData = (days: number) => {
     const data = [] as ChartRow[];
@@ -156,16 +171,23 @@ export default function Page() {
       ])
     );
     // update state once
-    return { data, chartConfig, title: "Revenue", description: "Track your revenue trend over time." };
+    return { 
+      data, 
+      chartConfig, 
+      title: "Revenue", 
+      description: `Total revenue: ${AppConstant.DATA.DEFAULT_CURRENCY.symbol}${sumRevenue}` };
   }
 
   const chartData = useMemo(() => {
     return processChartData(Number(range));
   }, [revenueData, range]);
 
-  const sumRevenue = useMemo(() => {
-    return revenueData?.reduce((accumulator, item) => accumulator + item.amount, 0);
-  }, [revenueData])
+  const onPageChange = (newPage: number) => {
+    // dispatch action to update page in the store
+    dispatch(setPage(newPage));
+    // this will trigger useEffect to refetch data for the new page
+    dispatch(getRevenues({ from: (dateFilter as DateRange)?.from?.toISOString(), to: (dateFilter as DateRange)?.to?.toISOString(), page: newPage, pageSize }));
+  }
 
   return (
     <main>
@@ -224,7 +246,7 @@ export default function Page() {
               {revenueData && revenueData.length > 0 ? revenueData.map((row, index) => (
                 <TableRow id={row.id} key={index}>
                   <TableCell id="category">{row.category ? row.category.name : "N/A"}</TableCell>
-                  <TableCell id="amount">{row.amount} {AppConstant.DATA.DEFAULT_CURRENCY}</TableCell>
+                  <TableCell id="amount">{row.amount} {AppConstant.DATA.DEFAULT_CURRENCY.code}</TableCell>
                   <TableCell id="revenue_date">{formatDate(row.revenue_date?.toLocaleString()!, "DD/MM/YYYY")}</TableCell>
                   <TableCell id="notes">{row.description}</TableCell>
                   <TableCell className="w-10">
@@ -248,16 +270,25 @@ export default function Page() {
                   </TableCell>
                 </TableRow>
               )}
-              {revenueData && revenueData.length > 0 && <TableRow>
+              {/* {revenueData && revenueData.length > 0 && 
+              <TableRow>
                 <TableCell colSpan={header.length - 1}>
                   Total revenues
                 </TableCell>
                 <TableCell>
                   {sumRevenue} {AppConstant.DATA.DEFAULT_CURRENCY}
                 </TableCell>
-              </TableRow>}
+              </TableRow>} */}
             </TableBody>
           </Table>
+        </div>
+        <div id="pagination">
+          <PaginationInteractive
+            page={page}
+            pageSize={pageSize}
+            total={total}
+            onPageChange={onPageChange}
+          />
         </div>
       </div>
       <div id="revenue-chart" className="mt-8">

@@ -5,32 +5,47 @@ import { createAsyncThunk, createSlice, type ActionReducerMapBuilder } from "@re
 
 interface ExpenseState extends State<Expense[]> {
   from?: string,
-  to?: string
+  to?: string,
+  page: number,
+  pageSize: number,
+  total: number
 }
 
 const initialState: ExpenseState = {
-  data: null,
+  data: [],
   loading: false,
   errors: null,
   from: undefined,
-  to: undefined
+  to: undefined,
+  page: 1,
+  pageSize: 10,
+  total: 0
 }
 
-export const getExpenses = createAsyncThunk<Expense[], { from?: string, to?: string }>("expense/getByCondition", async (params?: { from?: string, to?: string }) => {
-  let query = supabase
-    .from("expenses")
-    .select(`*, category:categories(*)`);
-  if (params?.from && params?.to) {
-    query = query
-      .gte("expense_date", params.from)
-      .lte("expense_date", params.to);
+export const getExpenses = createAsyncThunk<{ rows: Expense[]; count: number }, { from?: string, to?: string, page?: number, pageSize?: number }>(
+  "expense/get",
+  async (params?: { from?: string, to?: string, page?: number, pageSize?: number }) => {
+    const page = params?.page ?? 1;
+    const pageSize = params?.pageSize ?? 10;
+    const start = (page - 1) * pageSize;
+    const end = page * pageSize - 1;
+
+    let query = supabase
+      .from('expenses')
+      .select(`*, category:categories(*)`, { count: 'exact' });
+
+    if (params?.from && params?.to) {
+      query = query
+        .gte("expense_date", params.from)
+        .lte("expense_date", params.to);
+    }
+
+    // apply pagination range
+    const { data, error, count } = await query.order("expense_date", { ascending: false }).range(start, end);
+    if (error) throw new Error(error.message);
+    return { rows: data as unknown as Expense[], count: count ?? 0 };
   }
-
-  const { data, error } = await query.order("expense_date", { ascending: false });
-
-  if (error) throw new Error(error.message);
-  return data as Expense[];
-});
+);
 
 export const addExpense = createAsyncThunk<Expense, Omit<Expense, "id">>(
   "expense/add",
@@ -106,7 +121,13 @@ const expenseSlice = createSlice({
       state.errors = null;
       state.from = undefined;
       state.to = undefined;
-    }
+    },
+    setPage: (state, action) => {
+      state.page = action.payload;
+    },
+    setPageSize: (state, action) => {
+      state.pageSize = action.payload;
+    },
   },
   extraReducers: (builder: ActionReducerMapBuilder<ExpenseState>) => {
     builder
@@ -140,9 +161,10 @@ const expenseSlice = createSlice({
       })
       .addCase(getExpenses.fulfilled, (state, action) => {
         state.loading = false;
-        state.data = action.payload;
+        state.data = action.payload.rows;
         state.from = action.meta.arg.from;
         state.to = action.meta.arg.to;
+        state.total = action.payload.count;
         state.errors = null;
       })
       .addCase(getExpenses.rejected, (state, action) => {
@@ -166,7 +188,7 @@ const expenseSlice = createSlice({
         state.loading = true;
         state.errors = null;
       })
-      .addCase(getExpenseComparision.fulfilled, (state, action) => {
+      .addCase(getExpenseComparision.fulfilled, (state) => {
         state.loading = false;
         state.errors = null;
       })
@@ -177,5 +199,5 @@ const expenseSlice = createSlice({
   }
 });
 
-export const { clearExpense } = expenseSlice.actions;
+export const { clearExpense, setPage, setPageSize } = expenseSlice.actions;
 export default expenseSlice.reducer;

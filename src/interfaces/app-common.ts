@@ -3,7 +3,10 @@ export const AppConstant = {
     VERSION: "1.0.0",
     STORAGE_KEY: "pf:auth",
     DATA: {
-        DEFAULT_CURRENCY: "USD",
+        DEFAULT_CURRENCY: {
+            code: "USD",
+            symbol: "$"
+        },
         AUTH_STATE: {
             INITIAL_SESSION: "INITIAL_SESSION",
             PASSWORD_RECOVERY: "PASSWORD_RECOVERY",
