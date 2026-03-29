@@ -14,14 +14,12 @@ export function PaginationInteractive(
         page,
         pageSize,
         total,
-        onPageChange,
-        onPageSizeChange
+        onPageChange
     }: {
         page?: number;
         pageSize?: number;
         total?: number;
         onPageChange?: (page: number) => void;
-        onPageSizeChange?: (size: number) => void;
     }) {
     const current = page ?? 1;
     const size = pageSize ?? 10;
