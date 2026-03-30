@@ -1,11 +1,11 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useAppDispatch, type RootState } from "@/store";
 import { getRevenues, addRevenue, deleteRevenue, clearRevenues, setPage } from "@/store/revenue";
-import { CirclePlus, Trash } from "lucide-react";
+import { BookUp, CirclePlus, Trash } from "lucide-react";
 import { useEffect, useMemo, useState, type ChangeEvent } from "react";
 import { useSelector } from "react-redux";
 import type { Revenue } from "@/interfaces/revenue";
-import { formatDate } from "@/lib/utils";
+import { exportToExcel, formatDate } from "@/lib/utils";
 import DialogForm from "@/components/form";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -21,6 +21,7 @@ import { format, isSameDay, subDays } from "date-fns";
 import type { ChartRow } from "@/components/chart-interactive";
 import ChartInteractive from "@/components/chart-interactive";
 import { PaginationInteractive } from "@/components/pagination-interactive";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export default function Page() {
   const header = ["category", "amount", "date", "note", ""];
@@ -170,11 +171,12 @@ export default function Page() {
       ])
     );
     // update state once
-    return { 
-      data, 
-      chartConfig, 
-      title: "Revenue", 
-      description: `Total revenue: ${AppConstant.DATA.DEFAULT_CURRENCY.symbol}${sumRevenue}` };
+    return {
+      data,
+      chartConfig,
+      title: "Revenue",
+      description: `Total revenue: ${AppConstant.DATA.DEFAULT_CURRENCY.symbol}${sumRevenue}`
+    };
   }
 
   const chartData = useMemo(() => {
@@ -186,6 +188,18 @@ export default function Page() {
     dispatch(setPage(newPage));
     // this will trigger useEffect to refetch data for the new page
     dispatch(getRevenues({ from: (dateFilter as DateRange)?.from?.toLocaleString(), to: (dateFilter as DateRange)?.to?.toLocaleString(), page: newPage, pageSize }));
+  }
+
+  const exportData = () => {
+    // Implement export functionality here (e.g., generate CSV or Excel file)
+    const header = ["Category", `Amount (USD)`, "Date", "Description"];
+    const rows = revenueData?.map(revenue => [
+      revenue.category ? revenue.category.name : "N/A",
+      revenue.amount,
+      formatDate(revenue.revenue_date, "DD/MM/YYYY"),
+      revenue.description || ""
+    ]) || [];
+    exportToExcel(rows, header, "revenues", "Revenues");
   }
 
   return (
@@ -212,9 +226,30 @@ export default function Page() {
             </Button>
           </DatePicker>
         </div>
-        <Button variant="ghost" onClick={() => { setRevenueSelected(prev => ({ ...prev, user_id: user?.id || null })); setOpenRevenueForm(true) }} >
-          <CirclePlus className="h-6 w-6 cursor-pointer" />
-        </Button>
+        <div>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" onClick={() => { setRevenueSelected(prev => ({ ...prev, user_id: user?.id || null })); setOpenRevenueForm(true) }} >
+                  <CirclePlus className="h-6 w-6 cursor-pointer" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Add Revenue</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button id="export" variant="ghost" className="mb-2 ml-2" onClick={exportData}>
+                  <BookUp className="h-6 w-6 cursor-pointer" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Export Data</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
       </div>
       {/* Table List */}
       <div id="table">
