@@ -6,7 +6,7 @@ import {
     PaginationNext,
     PaginationPrevious,
 } from "@/components/ui/pagination";
-import { useState } from "react";
+import { useState, type JSX } from "react";
 
 
 export function PaginationInteractive(
@@ -50,7 +50,7 @@ export function PaginationInteractive(
         }
 
         // collapsed view when totalPages > 5
-        const pages: any[] = [];
+        const pages: JSX.Element[] = [];
 
         // always show first
         pages.push(

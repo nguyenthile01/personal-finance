@@ -73,7 +73,14 @@ export default function Page() {
 
   const handleAddExpense = async () => {
     if (!expenseSelected) return;
-    const { id, category, ...payload } = expenseSelected;
+    // const { id, category, ...payload } = expenseSelected;
+    const payload = {
+      amount: expenseSelected.amount,
+      category_id: expenseSelected.category_id,
+      user_id: expenseSelected.user_id,
+      expense_date: expenseSelected.expense_date,
+      description: expenseSelected.description
+    };
     try {
       await dispatch(addExpense(payload));
       setOpenExpenseForm(false);
@@ -186,7 +193,6 @@ export default function Page() {
       formatDate(expense.expense_date, "DD/MM/YYYY"),
       expense.description || ""
     ]) || [];
-    console.log("Exporting data...", rows);
     exportToExcel(rows, header, "expenses", "Expenses");
   }
 

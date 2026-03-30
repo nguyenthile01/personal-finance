@@ -1,4 +1,3 @@
-import ErrorDialog from "@/components/error-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,25 +12,21 @@ export default function SignUp() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
-    const [errorDialogOpen, setErrorDialogOpen] = useState(false);
     const dispatch = useAppDispatch();
-
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        // TODO: replace with real auth call
         try {
+            // TODO: replace with real auth call
             if (!isEmailValid(email))
                 return;
             if (!isPasswordValid(password))
                 return;
             if (!doPasswordsMatch(password, confirmPassword))
                 return;
-            dispatch(signUp({email, password}));
+            await dispatch(signUp({ email, password }));
             navigate("/sign-in")
-            // TODO: proceed after successful signup (e.g. redirect)
         } catch (error) {
-            setErrorDialogOpen(true);
-            console.error("Sign up error:", error);
+            console.error("Error during sign up:", error);
         }
     };
 
@@ -41,8 +36,8 @@ export default function SignUp() {
     };
 
     const isPasswordValid = (password: string) => {
-        const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
-        return passwordRegex.test(password) || doPasswordsMatch(password, confirmPassword);
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{10,}$/;
+        return passwordRegex.test(password);
     };
 
     const doPasswordsMatch = (password: string, confirmPassword: string) => {
@@ -94,7 +89,7 @@ export default function SignUp() {
                         })}
                     />
                 </Label>
-                <Button type="submit" className="w-full py-2 rounded">Sign up</Button>
+                <Button type="submit" className="w-full py-2 rounded" disabled={!isEmailValid(email) || !isPasswordValid(password) || !doPasswordsMatch(password, confirmPassword)}>Sign up</Button>
             </form>
             <div>
                 {!isEmailValid(email) && email.length > 0 && (
@@ -103,9 +98,18 @@ export default function SignUp() {
                     </p>
                 )}
                 {!isPasswordValid(password) && password.length > 0 && (
-                    <p className="mt-2 text-xs text-red-500">
-                        Password does not meet the required criteria.
-                    </p>
+                    <>
+                        <p className="mt-2 text-xs text-red-500">
+                            Password does not meet the required criteria:
+                        </p>
+                        <ul className="text-xs list-disc list-inside">
+                            <li>At least 10 characters long</li>
+                            <li>At least one uppercase letter</li>
+                            <li>At least one lowercase letter</li>
+                            <li>At least one number</li>
+                            <li>At least one special character</li>
+                        </ul>
+                    </>
                 )}
                 {!doPasswordsMatch(password, confirmPassword) && confirmPassword.length > 0 && (
                     <p className="mt-2 text-xs text-red-500">
@@ -119,9 +123,6 @@ export default function SignUp() {
                     Sign in
                 </a>
             </div>
-            {errorDialogOpen && (
-                <ErrorDialog open={errorDialogOpen} openChange={(open) => setErrorDialogOpen(open)} title="Sign Up Error" message={["An unexpected error occurred."]} children={undefined} />
-            )}
         </main>
     );
 }

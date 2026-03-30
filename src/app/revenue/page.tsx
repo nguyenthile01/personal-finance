@@ -82,7 +82,14 @@ export default function Page() {
 
   const handleAddRevenue = async () => {
     if (!revenueSelected) return;
-    const { id, category, ...payload } = revenueSelected;
+    // const { id, category, ...payload } = revenueSelected;
+    const payload = {
+      amount: revenueSelected.amount,
+      category_id: revenueSelected.category_id,
+      user_id: revenueSelected.user_id,
+      revenue_date: revenueSelected.revenue_date,
+      description: revenueSelected.description
+    }
     try {
       await dispatch(addRevenue(payload)).unwrap();
       setOpenRevenueForm(false);
@@ -303,15 +310,6 @@ export default function Page() {
                   </TableCell>
                 </TableRow>
               )}
-              {/* {revenueData && revenueData.length > 0 && 
-              <TableRow>
-                <TableCell colSpan={header.length - 1}>
-                  Total revenues
-                </TableCell>
-                <TableCell>
-                  {sumRevenue} {AppConstant.DATA.DEFAULT_CURRENCY}
-                </TableCell>
-              </TableRow>} */}
             </TableBody>
           </Table>
         </div>
