@@ -82,7 +82,7 @@ export default function Page() {
       description: expenseSelected.description
     };
     try {
-      await dispatch(addExpense(payload));
+      await dispatch(addExpense(payload)).unwrap();
       setOpenExpenseForm(false);
       setExpenseSelected({
         id: "",

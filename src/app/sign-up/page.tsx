@@ -1,10 +1,16 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import type { Profile } from "@/interfaces/profile";
 import { cn } from "@/lib/utils";
-import { useAppDispatch } from "@/store";
+import { useAppDispatch, type RootState } from "@/store";
 import { signUp } from "@/store/auth";
-import { useState } from "react";
+import { getCountries } from "@/store/country";
+import { addProfile } from "@/store/profile";
+import type { User } from "@supabase/supabase-js";
+import { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 
 export default function SignUp() {
@@ -13,6 +19,27 @@ export default function SignUp() {
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const dispatch = useAppDispatch();
+    const { data: countries } = useSelector((state: RootState) => state.country);
+    const [lastName, setLastName] = useState("");
+    const [firstName, setFirstName] = useState("");
+    const [country, setCountry] = useState("");
+    useEffect(() => {
+        dispatch(getCountries());
+    }, [dispatch]);
+
+    const createNewProfile = async (user: User) => {
+        const profile: Profile = {
+            id: user.id,
+            email: user.email!,
+            last_name: lastName,
+            first_name: firstName,
+            phone_number: "",
+            profile_picture: "",
+            country_id: country
+        }
+        await dispatch(addProfile(profile)).unwrap();
+    }
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
@@ -23,8 +50,9 @@ export default function SignUp() {
                 return;
             if (!doPasswordsMatch(password, confirmPassword))
                 return;
-            await dispatch(signUp({ email, password }));
-            navigate("/sign-in")
+            const newUser = await dispatch(signUp({ email, password })).unwrap();
+            await createNewProfile(newUser!);
+            navigate("/sign-in");
         } catch (error) {
             console.error("Error during sign up:", error);
         }
@@ -48,48 +76,73 @@ export default function SignUp() {
         <main className="max-w-md mx-auto p-6">
             <h1 className="text-2xl mb-4">Sign up</h1>
             <form onSubmit={handleSubmit} className="space-y-4">
-                <Label htmlFor="email" className="block">
-                    <span className="text-sm">Username</span>
-                    <Input
-                        id="email"
-                        type="email"
-                        value={email}
-                        onChange={e => setEmail(e.target.value)}
-                        required
-                        className={cn("mt-1 block w-full rounded border px-3 py-2", {
-                            "border-red-500": !isEmailValid(email) && email.length > 0
-                        })}
-                    />
-                </Label>
+                <Label htmlFor="lastName" className="text-sm block">Last Name<sup className="text-rose-600">*</sup></Label>
+                <Input
+                    id="lastName"
+                    type="text"
+                    value={lastName}
+                    required
+                    onChange={e => setLastName(e.target.value)}
+                    className={cn("mt-1 block w-full rounded border px-3 py-2")}
+                />
+                <Label htmlFor="firstName" className="text-sm block">First Name<sup className="text-rose-600">*</sup></Label>
+                <Input
+                    id="firstName"
+                    type="text"
+                    value={firstName}
+                    required
+                    onChange={e => setFirstName(e.target.value)}
+                    className={cn("mt-1 block w-full rounded border px-3 py-2")}
+                />
+                <Label htmlFor="email" className="text-sm block">Email<sup className="text-rose-600">*</sup></Label>
+                <Input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    required
+                    className={cn("mt-1 block w-full rounded border px-3 py-2", {
+                        "border-red-500": !isEmailValid(email) && email.trim().length > 0
+                    })}
+                />
 
-                <Label htmlFor="password" className="block">
-                    <span className="text-sm">Password</span>
-                    <Input
-                        id="password"
-                        type="password"
-                        value={password}
-                        onChange={e => setPassword(e.target.value)}
-                        required
-                        className={cn("mt-1 block w-full rounded border px-3 py-2", {
-                            "border-red-500": !isPasswordValid(password) && password.length > 0
-                        })}
-                    />
-                </Label>
+                <Label htmlFor="password" className="text-sm block">Password<sup className="text-rose-600">*</sup></Label>
+                <Input
+                    id="password"
+                    type="password"
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    required
+                    className={cn("mt-1 block w-full rounded border px-3 py-2", {
+                        "border-red-500": !isPasswordValid(password) && password.length > 0
+                    })}
+                />
 
-                <Label htmlFor="confirmPassword" className="block">
-                    <span className="text-sm">Confirm Password</span>
-                    <Input
-                        id="confirmPassword"
-                        type="password"
-                        value={confirmPassword}
-                        onChange={e => setConfirmPassword(e.target.value)}
-                        required
-                        className={cn("mt-1 block w-full rounded border px-3 py-2", {
-                            "border-red-500": !doPasswordsMatch(password, confirmPassword) && confirmPassword.length > 0
-                        })}
-                    />
-                </Label>
-                <Button type="submit" className="w-full py-2 rounded" disabled={!isEmailValid(email) || !isPasswordValid(password) || !doPasswordsMatch(password, confirmPassword)}>Sign up</Button>
+                <Label htmlFor="confirmPassword" className="text-sm block">Confirm Password</Label>
+                <Input
+                    id="confirmPassword"
+                    type="password"
+                    value={confirmPassword}
+                    onChange={e => setConfirmPassword(e.target.value)}
+                    required
+                    className={cn("mt-1 block w-full rounded border px-3 py-2", {
+                        "border-red-500": !doPasswordsMatch(password, confirmPassword) && confirmPassword.length > 0
+                    })}
+                />
+                <Label htmlFor="country" className="text-sm block">Country<sup className="text-rose-600">*</sup></Label>
+                <Select name="country" required onValueChange={(value) => setCountry(value)}>
+                    <SelectTrigger className="w-100">
+                        <SelectValue placeholder="Select country" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {countries?.map((c) => (
+                            <SelectItem key={c.id} value={(c.id).toString()} >
+                                {c.name}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+                <Button type="submit" className="w-full py-2 rounded">Sign up</Button>
             </form>
             <div>
                 {!isEmailValid(email) && email.length > 0 && (

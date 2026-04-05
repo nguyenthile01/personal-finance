@@ -9,7 +9,7 @@ import { signOut } from "@/store/auth";
 export function Header() {
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
-    const {data: user} = useSelector((state: RootState) => state.auth);
+    const { data: user } = useSelector((state: RootState) => state.auth);
     const onSignOut = () => {
         dispatch(signOut());
         navigate("/sign-in");
@@ -26,7 +26,7 @@ export function Header() {
                     <DropdownMenuItem disabled>
                         {user?.email || "Unknown User"}
                     </DropdownMenuItem>
-                    <DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate("/profile")}>
                         Profile
                     </DropdownMenuItem>
                     <DropdownMenuItem onSelect={() => onSignOut()}>

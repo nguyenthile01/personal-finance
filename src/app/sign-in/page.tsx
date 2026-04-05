@@ -20,7 +20,7 @@ export default function SignIn() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      dispatch(signIn({ email, password }));
+      dispatch(signIn({ email, password })).unwrap();
       navigate("/");
     } catch (error) {
       const message = error instanceof Error ? error.message : "An unexpected error occurred.";
