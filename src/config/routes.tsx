@@ -5,6 +5,7 @@ import { BanknoteArrowDown, BanknoteArrowUp, LayoutDashboard } from "lucide-reac
 import LoginPage from "@/app/sign-in/page";
 import { Navigate } from "react-router-dom";
 import ProtectedRoute from "../auth/protect-route";
+import ProfilePage from "@/app/profile/page";
 
 const DashboardPage = lazy(() => import("../app/dashboard/page"));
 const RevenuePage = lazy(() => import("../app/revenue/page"));
@@ -44,6 +45,10 @@ export const routes: RoutesConfig[] = [
                 name: "Expenses",
                 icon: BanknoteArrowDown
             },
+            {
+                path: "/profile",
+                element: <ProfilePage />
+            }
         ]
     },
     { path: "/sign-in", element: <LoginPage />, layout: "none" },

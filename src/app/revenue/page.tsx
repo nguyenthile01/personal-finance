@@ -1,11 +1,11 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useAppDispatch, type RootState } from "@/store";
 import { getRevenues, addRevenue, deleteRevenue, clearRevenues, setPage } from "@/store/revenue";
-import { CirclePlus, Trash } from "lucide-react";
+import { BookUp, CirclePlus, Trash } from "lucide-react";
 import { useEffect, useMemo, useState, type ChangeEvent } from "react";
 import { useSelector } from "react-redux";
 import type { Revenue } from "@/interfaces/revenue";
-import { formatDate } from "@/lib/utils";
+import { exportToExcel, formatDate } from "@/lib/utils";
 import DialogForm from "@/components/form";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -21,9 +21,12 @@ import { format, isSameDay, subDays } from "date-fns";
 import type { ChartRow } from "@/components/chart-interactive";
 import ChartInteractive from "@/components/chart-interactive";
 import { PaginationInteractive } from "@/components/pagination-interactive";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useTranslation } from "react-i18next";
 
 export default function Page() {
-  const header = ["category", "amount", "date", "note", ""];
+  const { t } = useTranslation();
+  const header = ["revenue.table_category", "revenue.table_amount", "revenue.table_date", "revenue.table_note", ""];
   const dispatch = useAppDispatch();
   const { data: revenueData } = useSelector((state: RootState) => state.revenue);
   const { page, pageSize, total } = useSelector((state: RootState) => ({
@@ -55,16 +58,15 @@ export default function Page() {
     revenue_date: new Date().toLocaleString(),
   }));
   const [range, setRange] = useState<string>("90");
+  useEffect(() => { dispatch(getCategories()) }, [dispatch])
   useEffect(() => {
     dispatch(getRevenues({ from: (dateFilter as DateRange)?.from?.toLocaleString(), to: (dateFilter as DateRange)?.to?.toLocaleString(), page, pageSize }));
-    dispatch(getCategories());
-
     return () => {
       // clear slice when leaving the page
       dispatch(clearRevenues());
       dispatch(clearCategories());
     }
-  }, [dispatch, dateFilter]);
+  }, [dispatch, dateFilter, page, pageSize]);
 
   useEffect(() => {
     // refetch when pagination changes
@@ -81,7 +83,14 @@ export default function Page() {
 
   const handleAddRevenue = async () => {
     if (!revenueSelected) return;
-    const { id, category, ...payload } = revenueSelected;
+    // const { id, category, ...payload } = revenueSelected;
+    const payload = {
+      amount: revenueSelected.amount,
+      category_id: revenueSelected.category_id,
+      user_id: revenueSelected.user_id,
+      revenue_date: revenueSelected.revenue_date,
+      description: revenueSelected.description
+    }
     try {
       await dispatch(addRevenue(payload)).unwrap();
       setOpenRevenueForm(false);
@@ -132,7 +141,7 @@ export default function Page() {
     const now = new Date();
 
     if (!revenueData || !revenueCategories)
-      return { data: [], chartConfig: {}, title: "Revenue", description: "Track your revenue trend over time." };
+      return { data: [], chartConfig: {}, title: t("revenue.title"), description: t("revenue.chart_description_1") };
 
     // create base structure (one entry per date)
     for (let i = days; i >= 0; i--) {
@@ -170,11 +179,12 @@ export default function Page() {
       ])
     );
     // update state once
-    return { 
-      data, 
-      chartConfig, 
-      title: "Revenue", 
-      description: `Total revenue: ${AppConstant.DATA.DEFAULT_CURRENCY.symbol}${sumRevenue}` };
+    return {
+      data,
+      chartConfig,
+      title: t("revenue.title"),
+      description: t("revenue.chart_description_2", { amount: sumRevenue, symbol: "$" })
+    };
   }
 
   const chartData = useMemo(() => {
@@ -186,6 +196,18 @@ export default function Page() {
     dispatch(setPage(newPage));
     // this will trigger useEffect to refetch data for the new page
     dispatch(getRevenues({ from: (dateFilter as DateRange)?.from?.toLocaleString(), to: (dateFilter as DateRange)?.to?.toLocaleString(), page: newPage, pageSize }));
+  }
+
+  const exportData = () => {
+    // Implement export functionality here (e.g., generate CSV or Excel file)
+    const header = [t("revenue.export_category"), t("revenue.export_amount"), t("revenue.export_date"), t("revenue.export_description")];
+    const rows = revenueData?.map(revenue => [
+      revenue.category ? revenue.category.name : "N/A",
+      revenue.amount,
+      formatDate(revenue.revenue_date, "DD/MM/YYYY"),
+      revenue.description || ""
+    ]) || [];
+    exportToExcel(rows, header, "revenues", "Revenues");
   }
 
   return (
@@ -208,13 +230,34 @@ export default function Page() {
               onClick={() => {
                 setDateFilter(undefined);
               }}>
-              Reset
+              {t("revenue.button_reset")}
             </Button>
           </DatePicker>
         </div>
-        <Button variant="ghost" onClick={() => { setRevenueSelected(prev => ({ ...prev, user_id: user?.id || null })); setOpenRevenueForm(true) }} >
-          <CirclePlus className="h-6 w-6 cursor-pointer" />
-        </Button>
+        <div>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" onClick={() => { setRevenueSelected(prev => ({ ...prev, user_id: user?.id || null })); setOpenRevenueForm(true) }} >
+                  <CirclePlus className="h-6 w-6 cursor-pointer" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{t("revenue.button_add_revenue")}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button id="export" variant="ghost" className="mb-2 ml-2" onClick={exportData}>
+                  <BookUp className="h-6 w-6 cursor-pointer" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>{t("revenue.button_export_data")}</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
       </div>
       {/* Table List */}
       <div id="table">
@@ -228,7 +271,7 @@ export default function Page() {
           <TableHeader>
             <TableRow>
               {header.map((head) => (
-                <TableHead key={head}>{head}</TableHead>
+                <TableHead key={head}>{t(head)}</TableHead>
               ))}
             </TableRow>
           </TableHeader>
@@ -264,19 +307,10 @@ export default function Page() {
               )) : (
                 <TableRow>
                   <TableCell colSpan={header.length} className="text-center">
-                    No revenue data available.
+                    {t("revenue.empty_table_message")}
                   </TableCell>
                 </TableRow>
               )}
-              {/* {revenueData && revenueData.length > 0 && 
-              <TableRow>
-                <TableCell colSpan={header.length - 1}>
-                  Total revenues
-                </TableCell>
-                <TableCell>
-                  {sumRevenue} {AppConstant.DATA.DEFAULT_CURRENCY}
-                </TableCell>
-              </TableRow>} */}
             </TableBody>
           </Table>
         </div>
@@ -301,7 +335,7 @@ export default function Page() {
       {/* Dialog content */}
       {openRevenueForm &&
         <DialogForm
-          title="Add New Revenue"
+          title={t("revenue.dialog_add_revenue")}
           open={openRevenueForm}
           onOpenChange={(open) => setOpenRevenueForm(open)}
           OKFunc={handleAddRevenue}>
@@ -310,7 +344,7 @@ export default function Page() {
             <Label htmlFor="category">Category:</Label>
             <Select name="category" required onValueChange={(value) => updateField("category_id", value)}>
               <SelectTrigger className="w-50">
-                <SelectValue placeholder="Select category" />
+                <SelectValue placeholder={t("revenue.label_category")} />
               </SelectTrigger>
               <SelectContent>
                 {revenueCategories.map((category) => (
@@ -322,7 +356,7 @@ export default function Page() {
             </Select>
           </div>
           <div id="amount" className="mb-1">
-            <Label htmlFor="amount">Amount:</Label>
+            <Label htmlFor="amount">{t("revenue.label_amount")}</Label>
             <Input
               type="number"
               name="amount"
@@ -339,20 +373,20 @@ export default function Page() {
               setDate={(date) => updateField("revenue_date", (date as Date).toLocaleString())}
             />
           </div>
-          <div id="description" className="mb-1">
-            <Label htmlFor="description">Note:</Label>
+          <div id="note" className="mb-1">
+            <Label htmlFor="note">{t("revenue.label_note")}</Label>
             <Textarea
-              name="description"
-              placeholder="Enter any notes here..."
+              name="note"
+              placeholder={t("revenue.placeholder_notes")}
               value={revenueSelected?.description || ""}
               onChange={(e) => handleInputChange(e)} />
           </div>
         </DialogForm>
       }
       {openConfirmDeleteForm &&
-        <DialogForm title={"Delete revenue"} open={openConfirmDeleteForm} onOpenChange={(open) => setOpenConfirmDeleteForm(open)} OKFunc={handleDeleteRevenue}>
-          <p>Dow you want to delete revenue?</p>
-          <p>If you delete, you can't restore again</p>
+        <DialogForm title={t("revenue.dialog_delete_revenue")} open={openConfirmDeleteForm} onOpenChange={(open) => setOpenConfirmDeleteForm(open)} OKFunc={handleDeleteRevenue}>
+          <p>{t("revenue.delete_confirmation")}</p>
+          <p>{t("revenue.delete_warning")}</p>
         </DialogForm>
       }
     </main>
