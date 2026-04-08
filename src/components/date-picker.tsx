@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { CalendarIcon } from "lucide-react"
-import { format, isValid } from "date-fns"
+import { format, isValid, type Locale } from "date-fns"
 import { type DateRange } from "react-day-picker"
 
 import { Button } from "@/components/ui/button"
@@ -13,6 +13,14 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import { enUS, ja, vi } from "date-fns/locale";
+import i18n from "i18next";
+
+const localeMap: Record<string, Locale> = {
+  en: enUS,
+  vi: vi,
+  ja: ja
+};
 
 // 1. Define Props for different modes to ensure type safety
 type DatePicker<T> = {
@@ -39,7 +47,7 @@ export function DatePicker(props: React.ComponentProps<"div"> & DatePicker<Date 
     if (mode === "range") {
       const range = date as DateRange
       if (range.from && range.to) {
-        return `${format(range.from, "LLL dd, y")} - ${format(range.to, "LLL dd, y")}`
+        return `${format(range.from, "LLL dd, y", { locale: localeMap[i18n.language] || enUS })} - ${format(range.to, "LLL dd, y", { locale: localeMap[i18n.language] || enUS })}`
       }
       return range.from ? format(range.from, "LLL dd, y") : ""
     }
@@ -112,6 +120,11 @@ export function DatePicker(props: React.ComponentProps<"div"> & DatePicker<Date 
             disabled={[
               { after: new Date(now.getFullYear(), now.getMonth() + 1, now.getDate()) }
             ]}
+            locale={localeMap[i18n.language] || enUS}
+            formatters={{
+              formatMonthDropdown: (date) =>
+                format(date, "MMM", { locale: localeMap[i18n.language] || enUS }), // i18n month
+            }}
           />
           {children}
         </PopoverContent>

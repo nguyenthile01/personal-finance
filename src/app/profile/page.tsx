@@ -9,10 +9,11 @@ import { getUser } from "@/store/auth";
 import { clearCountries, getCountries } from "@/store/country";
 import { clearProfile, getProfile, updateProfile } from "@/store/profile";
 import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useSelector } from "react-redux";
 
 export default function ProfilePage() {
-
+  const { t } = useTranslation();
   const { data: profile } = useSelector((state: RootState) => state.profile);
   const { data: user } = useSelector((state: RootState) => state.auth);
   const { data: countries } = useSelector((state: RootState) => state.country);
@@ -32,7 +33,7 @@ export default function ProfilePage() {
     return () => {
       dispatch(clearCountries());
     }
-  }, []);
+  }, [dispatch]);
 
   useEffect(() => {
     if (user && user.id) {
@@ -68,16 +69,19 @@ export default function ProfilePage() {
     <>
       {viewMode &&
         <div id="profile-info">
-          <h1 className="mb-3">Hi {profile?.first_name} {profile?.last_name}</h1>
-          <p className="mb-1">Email: {profile?.email}</p>
-          <p className="mb-1">Phone: {profile?.phone_number || ""}</p>
-          <p className="mb-1">Country: {profile?.country?.name}</p>
-          <Button variant="ghost" className="py-2" onClick={() => setViewMode(false)}>Edit Profile</Button>
+          <h1 className="mb-3">{t("profile.greeting", {
+            firstName: profile?.first_name,
+            lastName: profile?.last_name
+          })}</h1>
+          <p className="mb-1">{t("profile.email")} {profile?.email}</p>
+          <p className="mb-1">{t("profile.phone")} {profile?.phone_number || ""}</p>
+          <p className="mb-1">{t("profile.country")} {profile?.country?.name}</p>
+          <Button variant="ghost" className="py-2" onClick={() => setViewMode(false)}>{t("profile.button_edit")}</Button>
         </div>
       }
       {!viewMode &&
         <form onSubmit={handleSubmit} className="space-y-4">
-          <Label htmlFor="lastName" className="text-sm block">Last Name<sup className="text-rose-600">*</sup></Label>
+          <Label htmlFor="lastName" className="text-sm block">{t("profile.last_name")}<sup className="text-rose-600">*</sup></Label>
           <Input
             id="lastName"
             type="text"
@@ -85,7 +89,7 @@ export default function ProfilePage() {
             readOnly
             className={cn("mt-1 block w-full rounded border px-3 py-2")}
           />
-          <Label htmlFor="firstName" className="text-sm block">First Name<sup className="text-rose-600">*</sup></Label>
+          <Label htmlFor="firstName" className="text-sm block">{t("profile.first_name")}<sup className="text-rose-600">*</sup></Label>
           <Input
             id="firstName"
             type="text"
@@ -93,7 +97,7 @@ export default function ProfilePage() {
             readOnly
             className={cn("mt-1 block w-full rounded border px-3 py-2")}
           />
-          <Label htmlFor="email" className="text-sm block">Email<sup className="text-rose-600">*</sup></Label>
+          <Label htmlFor="email" className="text-sm block">{t("profile.email")}<sup className="text-rose-600">*</sup></Label>
           <Input
             id="email"
             type="email"
@@ -101,7 +105,7 @@ export default function ProfilePage() {
             readOnly
             className={cn("mt-1 block w-full rounded border px-3 py-2")}
           />
-          <Label htmlFor="phoneNumber" className="text-sm block">Phone Number</Label>
+          <Label htmlFor="phoneNumber" className="text-sm block">{t("profile.phone")}</Label>
           <Input
             id="email"
             type="text"
@@ -109,13 +113,13 @@ export default function ProfilePage() {
             onChange={(e) => setPhoneNumber(e.target.value.trim())}
             className={cn("mt-1 block w-full rounded border px-3 py-2")}
           />
-          <Label htmlFor="country" className="text-sm block">Country<sup className="text-rose-600">*</sup></Label>
+          <Label htmlFor="country" className="text-sm block">{t("profile.country")}<sup className="text-rose-600">*</sup></Label>
           <Select
             name="country"
             required value={countryId}
             onValueChange={(value) => setCountryId(value)}>
             <SelectTrigger className="w-100">
-              <SelectValue placeholder="Select country" />
+              <SelectValue placeholder={t("profile.placeholder_select_category")} />
             </SelectTrigger>
             <SelectContent>
               {countries?.map((c) => (
@@ -125,8 +129,8 @@ export default function ProfilePage() {
               ))}
             </SelectContent>
           </Select>
-          <Button type="submit" className="py-2 mr-2 rounded"> Update Profile</Button>
-          <Button variant="outline" className="py-2" onClick={() => setViewMode(true)}> Cancel</Button>
+          <Button type="submit" className="py-2 mr-2 rounded">{t("profile.button_update")}</Button>
+          <Button variant="outline" className="py-2" onClick={() => setViewMode(true)}>{t("profile.button_cancel")}</Button>
         </form>
       }
     </>

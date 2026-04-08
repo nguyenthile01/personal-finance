@@ -23,9 +23,10 @@ import { isSameDay } from "date-fns";
 import ChartInteractive from "@/components/chart-interactive";
 import { PaginationInteractive } from "@/components/pagination-interactive";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-
+import { useTranslation } from "react-i18next";
 export default function Page() {
-  const header = ["category", "amount", "date", "note", ""];
+  const { t } = useTranslation();
+  const header = [t("expense.table_category"), t("expense.table_amount"), t("expense.table_date"), t("expense.table_note"), ""];
   const dispatch = useAppDispatch();
   const { data: expenseData } = useSelector((state: RootState) => state.expense);
   const { data: categories } = useSelector((state: RootState) => state.categories);
@@ -131,7 +132,7 @@ export default function Page() {
     const now = new Date();
 
     if (!expenseData || !expenseCategories)
-      return { data: [], chartConfig: {}, title: "Expense", description: "Track your expense trend over time." } as ChartData<ChartRow>;
+      return { data: [], chartConfig: {}, title: t("expense.title"), description: t("expense.chart_description_1") } as ChartData<ChartRow>;
 
     // create base structure (one entry per date)
     for (let i = days; i >= 0; i--) {
@@ -170,8 +171,8 @@ export default function Page() {
     return {
       data,
       chartConfig,
-      title: "Expense",
-      description: `Total expense: ${AppConstant.DATA.DEFAULT_CURRENCY.symbol}${sumExpense}`
+      title: t("expense.title"),
+      description: t("expense.chart_description_2", { amount: sumExpense, symbol: '$' })
     } as ChartData<ChartRow>;
   }
 
@@ -186,7 +187,7 @@ export default function Page() {
 
   const exportData = () => {
     // Implement export functionality here (e.g., generate CSV or Excel file)
-    const header = ["Category", `Amount (USD)`, "Date", "Description"];
+    const header = [t("expense.export_category"), t("expense.export_amount", { symbol: "$" }), t("expense.export_date"), t("expense.export_description")];
     const rows = expenseData?.map(expense => [
       expense.category ? expense.category.name : "N/A",
       expense.amount,
@@ -225,7 +226,7 @@ export default function Page() {
                 onClick={() => {
                   setDateFilter(undefined);
                 }}>
-                Reset
+                {t("expense.button_reset")}
               </Button>
             </DatePicker>
           </div>
@@ -237,7 +238,7 @@ export default function Page() {
                     <CirclePlus className="h-6 w-6 cursor-pointer" />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>Add Expense</TooltipContent>
+                <TooltipContent>{t("expense.button_add_expense")}</TooltipContent>
               </Tooltip>
             </TooltipProvider>
             <TooltipProvider>
@@ -247,7 +248,7 @@ export default function Page() {
                     <BookUp className="h-6 w-6 cursor-pointer" />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>Export Data</TooltipContent>
+                <TooltipContent>{t("expense.button_export_data")}</TooltipContent>
               </Tooltip>
             </TooltipProvider>
 
@@ -303,7 +304,7 @@ export default function Page() {
               )) : (
                 <TableRow>
                   <TableCell colSpan={header.length} className="text-center">
-                    No expense data available.
+                    {t("expense.empty_table_message")}
                   </TableCell>
                 </TableRow>
               )}
@@ -335,7 +336,7 @@ export default function Page() {
           OKFunc={handleAddExpense}>
           {/* Form fields go here */}
           <div id="category" className="mb-1">
-            <Label htmlFor="category">Category:</Label>
+            <Label htmlFor="category">{t("expense.label_category")}</Label>
             <Select name="category" required onValueChange={(value) => updateField("category_id", value)}>
               <SelectTrigger className="w-50">
                 <SelectValue placeholder="Select category" />
@@ -350,7 +351,7 @@ export default function Page() {
             </Select>
           </div>
           <div id="amount" className="mb-1">
-            <Label htmlFor="amount">Amount:</Label>
+            <Label htmlFor="amount">{t("expense.label_amount")}</Label>
             <Input
               type="number"
               name="amount"
@@ -361,7 +362,7 @@ export default function Page() {
               onChange={(e) => handleInputChange(e)} />
           </div>
           <div id="date" className="mb-1">
-            <Label htmlFor="date">Date:</Label>
+            <Label htmlFor="date">{t("expense.label_date")}</Label>
             <DatePicker
               mode="single"
               date={expenseSelected?.expense_date ? new Date(expenseSelected.expense_date) : new Date()}
@@ -369,10 +370,10 @@ export default function Page() {
             />
           </div>
           <div id="description" className="mb-1">
-            <Label htmlFor="description">Note:</Label>
+            <Label htmlFor="description">{t("expense.label_note")}</Label>
             <Textarea
               name="description"
-              placeholder="Enter any notes here..."
+              placeholder={t("expense.placeholder_notes")}
               value={expenseSelected?.description || ""}
               onChange={(e) => handleInputChange(e)} />
           </div>
@@ -380,8 +381,8 @@ export default function Page() {
       }
       {openConfirmDeleteForm &&
         <DialogForm title={"Delete expense"} open={openConfirmDeleteForm} onOpenChange={(open) => setOpenConfirmDeleteForm(open)} OKFunc={handleDeleteExpense}>
-          <p>Dow you want to delete expense?</p>
-          <p>If you delete, you can't restore again</p>
+          <p>{t("expense.delete_confirmation")}</p>
+          <p>{t("expense.delete_warning")}</p>
         </DialogForm>
       }
     </main>
