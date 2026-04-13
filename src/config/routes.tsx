@@ -30,19 +30,19 @@ export const routes: RoutesConfig[] = [
             {
                 path: "/dashboard",
                 element: <DashboardPage />,
-                name: "Dashboard",
+                name: "dashboard.title",
                 icon: LayoutDashboard
             },
             {
                 path: "/revenue",
                 element: <RevenuePage />,
-                name: "Revenue",
+                name: "revenue.title",
                 icon: BanknoteArrowUp
             },
             {
                 path: "/expenses",
                 element: <ExpensesPage />,
-                name: "Expenses",
+                name: "expense.title",
                 icon: BanknoteArrowDown
             },
             {
