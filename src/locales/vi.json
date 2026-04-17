@@ -49,7 +49,11 @@
     "delete_confirmation": "Bạn có muốn xóa chi tiêu?",
     "delete_warning": "Nếu xóa, bạn không thể khôi phục lại",
     "chart_description_1": "Theo dõi xu hướng chi tiêu theo thời gian.",
-    "chart_description_2": "Tổng chi tiêu: {{amount}}{{symbol}}"
+    "chart_description_2": "Tổng chi tiêu: {{amount}}{{symbol}}",
+    "no_category_title": "Chưa có danh mục",
+    "no_category_message_part1": "Bạn chưa tạo danh mục nào.",
+    "no_category_message_part2": "Vui lòng đến trang Danh mục để tạo.",
+    "go_to_category": "Đến trang Danh mục"
   },
   "revenue": {
     "title": "Thu nhập",
@@ -76,10 +80,14 @@
     "delete_confirmation": "Bạn có muốn xóa thu nhập?",
     "delete_warning": "Nếu xóa, bạn không thể khôi phục lại",
     "chart_description_1": "Theo dõi xu hướng thu nhập theo thời gian.",
-    "chart_description_2": "Tổng thu nhập: {{amount}}{{symbol}}"
+    "chart_description_2": "Tổng thu nhập: {{amount}}{{symbol}}",
+    "no_category_title": "Chưa có danh mục",
+    "no_category_message_part1": "Bạn chưa tạo danh mục nào.",
+    "no_category_message_part2": "Vui lòng đến trang Danh mục để tạo.",
+    "go_to_category": "Đến trang Danh mục"
   },
   "dashboard": {
-    "title": "Bảng điều khiển",
+    "title": "Trang chủ",
     "dashboard_revenues": "Thu nhập",
     "dashboard_total_revenues": "Tổng thu nhập",
     "dashboard_expenses": "Chi tiêu",
@@ -106,6 +114,25 @@
     "button_edit": "Chỉnh sửa hồ sơ",
     "placeholder_select_category": "Chọn danh mục"
   },
+  "category": {
+    "title": "Danh mục",
+    "table_name": "Tên danh mục",
+    "table_type": "Loại",
+    "table_created_at": "Ngày tạo",
+    "empty_table_message": "Không có dữ liệu danh mục.",
+    "button_add_category": "Thêm danh mục",
+    "dialog_add_category": "Thêm danh mục mới",
+    "dialog_delete_category": "Xóa danh mục",
+    "label_name": "Tên:",
+    "label_type": "Loại:",
+    "revenue": "Thu nhập",
+    "expense": "Chi tiêu",
+    "placeholder_select_type": "Chọn loại",
+    "field_name_placeholder": "Nhập tên danh mục",
+    "field_type_placeholder": "Nhập loại danh mục",
+    "delete_confirmation": "Bạn có muốn xóa danh mục?",
+    "delete_warning": "Nếu xóa, bạn không thể khôi phục lại"
+  },
   "country": {
     "vi": "Việt Nam",
     "en": "Mỹ - Anh",
@@ -131,8 +158,14 @@
     "button_back": "Về trang chủ",
     "button_contact": "Liên hệ"
   },
+  "Revenue": "Thu nhập",
+  "Expense": "Chi tiêu",
   "vi": "Tiếng Việt",
   "en": "Tiếng Anh",
   "ja": "Tiếng Nhật",
-  "errorSys": "Lỗi hệ thống. Vui lòng tải lại trang và thử lại!"
+  "error_system": "Lỗi hệ thống. Vui lòng tải lại trang và thử lại!",
+  "error_limit_exceeded": "Bạn đã đạt đến số lượng tối đa {{name}} cho phép. Vui lòng xóa một số {{name}} trước khi thêm mới.",
+  "error_duplicate_name": "Tên {{name}} đã tồn tại. Vui lòng chọn một tên khác.",
+  "error_network": "Lỗi mạng. Vui lòng kiểm tra kếtnối của bạn và thử lại.",
+  "error_unexpected": "Đã xảy ra lỗi không mong muốn. Vui lòng tải lại trang và thử lại."
 }

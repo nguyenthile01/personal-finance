@@ -49,7 +49,11 @@
     "delete_confirmation": "Do you want to delete expense?",
     "delete_warning": "If you delete, you can't restore again",
     "chart_description_1": "Track your expense trend over time.",
-    "chart_description_2": "Total expense: {{amount}}{{symbol}}"
+    "chart_description_2": "Total expense: {{amount}}{{symbol}}",
+    "no_category_title": "No categories",
+    "no_category_message_part1": "You haven't created any categories.",
+    "no_category_message_part2": "Please create one on the Category page.",
+    "go_to_category": "Go to Category"
   },
   "revenue": {
     "title": "Revenue",
@@ -76,7 +80,11 @@
     "delete_confirmation": "Do you want to delete revenue?",
     "delete_warning": "If you delete, you can't restore again",
     "chart_description_1": "Track your expense trend over time.",
-    "chart_description_2": "Total expense: {{amount}}{{symbol}}"
+    "chart_description_2": "Total expense: {{amount}}{{symbol}}",
+    "no_category_title": "No categories",
+    "no_category_message_part1": "You haven't created any categories.",
+    "no_category_message_part2": "Please create one on the Category page.",
+    "go_to_category": "Go to Category"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -106,6 +114,25 @@
     "button_edit": "Edit Profile",
     "placeholder_select_category": "Select category"
   },
+  "category": {
+    "title": "Category",
+    "field_name": "Name",
+    "table_type": "Type",
+    "table_created_at": "Created At",
+    "button_add_category": "Add Category",
+    "empty_table_message": "No category data available.",
+    "dialog_add_category": "Add New Category",
+    "dialog_delete_category": "Delete category",
+    "label_name": "Name:",
+    "label_type": "Type:",
+    "revenue": "Revenue",
+    "expense": "Expense",
+    "placeholder_select_type": "Select type",
+    "field_name_placeholder": "Enter category name",
+    "field_type_placeholder": "Enter category type",
+    "delete_confirmation": "Do you want to delete category?",
+    "delete_warning": "If you delete, you can't restore again"
+  },
   "country": {
     "vi": "Viet Nam",
     "en": "US-UK",
@@ -131,8 +158,14 @@
     "button_back": "Go Back Home",
     "button_contact": "Contact us"
   },
+  "Revenue": "Revenue",
+  "Expense": "Expense",
   "vi": "Vietnamese",
   "en": "English",
   "ja": "Japan",
-  "errorSys": "Error system. Refresh page and try again!"
+  "error_system": "Error system. Refresh page and try again!",
+  "error_limit_exceeded": "You have reached the maximum number of {{name}} allowed. Please delete some {{name}} before adding new ones.",
+  "error_duplicate_name": "{{name}} name already exists. Please choose a different name.",
+  "error_network": "Network error. Please check your connection and try again.",
+  "error_unexpected": "An unexpected error occurred. Please refresh the page and try again."
 }

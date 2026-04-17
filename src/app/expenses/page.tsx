@@ -2,6 +2,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useAppDispatch, type RootState } from "@/store";
 import { BookUp, CirclePlus, Trash } from "lucide-react";
 import { useEffect, useMemo, useState, type ChangeEvent } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { exportToExcel, formatDate } from "@/lib/utils";
 import DialogForm from "@/components/form";
@@ -10,13 +11,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/date-picker";
 import { Textarea } from "@/components/ui/textarea";
-import { getCategories } from "@/store/category";
+import { clearCategories, getCategories } from "@/store/category";
 import { AppConstant } from "@/interfaces/app-common";
 import { getUser } from "@/store/auth";
 import { type DateRange } from "react-day-picker";
 import { Button } from "@/components/ui/button";
 import type { Expense } from "@/interfaces/expense";
-import { addExpense, deleteExpense, getExpenses, setPage } from "@/store/expense";
+import { addExpense, clearExpense, deleteExpense, getExpenses, setPage } from "@/store/expense";
 import { subDays, format } from "date-fns";
 import type { ChartData, ChartRow } from "@/components/chart-interactive";
 import { isSameDay } from "date-fns";
@@ -24,14 +25,18 @@ import ChartInteractive from "@/components/chart-interactive";
 import { PaginationInteractive } from "@/components/pagination-interactive";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useTranslation } from "react-i18next";
+import { clearProfile, getProfile } from "@/store/profile";
 export default function Page() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const header = [t("expense.table_category"), t("expense.table_amount"), t("expense.table_date"), t("expense.table_note"), ""];
   const dispatch = useAppDispatch();
   const { data: expenseData } = useSelector((state: RootState) => state.expense);
   const { data: categories } = useSelector((state: RootState) => state.categories);
   const { data: user } = useSelector((state: RootState) => state.auth);
+  const { data: profile } = useSelector((state: RootState) => state.profile);
   const [openExpenseForm, setOpenExpenseForm] = useState<boolean>(false);
+  const [openNoCategoryWarning, setOpenNoCategoryWarning] = useState<boolean>(false);
   const [dateFilter, setDateFilter] = useState<DateRange | Date | undefined>(
     () => {
       const now = new Date();
@@ -56,11 +61,9 @@ export default function Page() {
   const { page, pageSize, total } = useSelector((state: RootState) => state.expense);
   useEffect(() => {
     dispatch(getExpenses({ from: (dateFilter as DateRange)?.from?.toLocaleString(), to: (dateFilter as DateRange)?.to?.toLocaleString() }));
-    dispatch(getCategories());
     return () => {
       // clear slice when leaving the page
-      dispatch(getExpenses({ from: (dateFilter as DateRange)?.from?.toLocaleString(), to: (dateFilter as DateRange)?.to?.toLocaleString() }));
-      dispatch(getCategories());
+      dispatch(clearExpense());
     }
   }, [dispatch, dateFilter]);
 
@@ -69,6 +72,15 @@ export default function Page() {
       dispatch(getUser());
     }
   }, [user, dispatch]);
+
+  useEffect(() => {
+    dispatch(getProfile(user?.id || ""));
+    dispatch(getCategories());
+    return () => {
+      dispatch(clearProfile());
+      dispatch(clearCategories());
+    }
+  }, [dispatch]);
 
   const expenseCategories = useMemo(() => categories ? categories.filter(category => category.type === "Expense") : [], [categories]);
 
@@ -102,10 +114,6 @@ export default function Page() {
   const handleInputChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
     setExpenseSelected((prev) => ({ ...prev, [name]: type === 'number' ? Number(value) : value }));
-  }
-
-  const updateField = (name: keyof Expense, value: string) => {
-    setExpenseSelected(prev => ({ ...prev, [name]: value }));
   }
 
   const handleDeleteExpense = async () => {
@@ -147,7 +155,7 @@ export default function Page() {
         const total = expenseData
           .filter(
             (expense) =>
-              expense.category_id === category.id &&
+              expense.category_id === Number(category.id) &&
               isSameDay(new Date(expense.expense_date), date)
           )
           .reduce((sum, el) => sum + el.amount, 0);
@@ -234,7 +242,15 @@ export default function Page() {
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button id="add-expense" variant="ghost" onClick={() => { setExpenseSelected(prev => ({ ...prev, user_id: user?.id || null })); setOpenExpenseForm(true) }} >
+                  <Button id="add-expense" variant="ghost" onClick={() => {
+                    // If there are no expense categories, show warning and do not open form
+                    if (!expenseCategories || expenseCategories.length === 0) {
+                      setOpenNoCategoryWarning(true);
+                      return;
+                    }
+                    setExpenseSelected(prev => ({ ...prev, user_id: user?.id || null }));
+                    setOpenExpenseForm(true);
+                  }} >
                     <CirclePlus className="h-6 w-6 cursor-pointer" />
                   </Button>
                 </TooltipTrigger>
@@ -285,7 +301,7 @@ export default function Page() {
               {expenseData && expenseData.length > 0 ? expenseData.map((row) => (
                 <TableRow id={row.id} key={row.id}>
                   <TableCell id="category">{row.category ? row.category.name : "N/A"}</TableCell>
-                  <TableCell id="amount">{row.amount} {AppConstant.DATA.DEFAULT_CURRENCY.code}</TableCell>
+                  <TableCell id="amount">{row.amount} {profile?.country?.currency || AppConstant.DATA.DEFAULT_CURRENCY.code}</TableCell>
                   <TableCell id="expense_date">{formatDate(row.expense_date?.toLocaleString()!, "DD/MM/YYYY")}</TableCell>
                   <TableCell id="notes">{row.description}</TableCell>
                   <TableCell className="w-10">
@@ -330,16 +346,19 @@ export default function Page() {
       {/* Dialog content */}
       {openExpenseForm &&
         <DialogForm
-          title="Add New Expense"
+          title={t("expense.dialog_add_expense")}
           open={openExpenseForm}
           onOpenChange={(open) => setOpenExpenseForm(open)}
           OKFunc={handleAddExpense}>
           {/* Form fields go here */}
           <div id="category" className="mb-1">
             <Label htmlFor="category">{t("expense.label_category")}</Label>
-            <Select name="category" required onValueChange={(value) => updateField("category_id", value)}>
+            <Select
+              name="category"
+              required
+              onValueChange={(value) => setExpenseSelected(prev => ({ ...prev, category_id: Number(value) }))}>
               <SelectTrigger className="w-50">
-                <SelectValue placeholder="Select category" />
+                <SelectValue placeholder={t("expense.placeholder_select_category")} />
               </SelectTrigger>
               <SelectContent>
                 {expenseCategories.map((category) => (
@@ -366,7 +385,7 @@ export default function Page() {
             <DatePicker
               mode="single"
               date={expenseSelected?.expense_date ? new Date(expenseSelected.expense_date) : new Date()}
-              setDate={(date) => updateField("expense_date", (date as Date)!.toLocaleString())}
+              setDate={(date) => setExpenseSelected(prev => ({ ...prev, expense_date: (date as Date)!.toLocaleString() }))}
             />
           </div>
           <div id="description" className="mb-1">
@@ -379,8 +398,24 @@ export default function Page() {
           </div>
         </DialogForm>
       }
+      {openNoCategoryWarning &&
+        <DialogForm
+          title={t("expense.no_category_title")}
+          description={<>
+            {t("expense.no_category_message_part1")} <br />
+            <Link to="/category" className="text-primary underline">{t("expense.go_to_category")}</Link>
+          </>}
+          open={openNoCategoryWarning}
+          onOpenChange={(open) => setOpenNoCategoryWarning(open)}
+          OKFunc={() => {
+            // navigation to category page
+            navigate("/category");
+          }}
+          OKBtnName={t("expense.go_to_category")}
+        />
+      }
       {openConfirmDeleteForm &&
-        <DialogForm title={"Delete expense"} open={openConfirmDeleteForm} onOpenChange={(open) => setOpenConfirmDeleteForm(open)} OKFunc={handleDeleteExpense}>
+        <DialogForm title={t("expense.dialog_delete_expense")} open={openConfirmDeleteForm} onOpenChange={(open) => setOpenConfirmDeleteForm(open)} OKFunc={handleDeleteExpense}>
           <p>{t("expense.delete_confirmation")}</p>
           <p>{t("expense.delete_warning")}</p>
         </DialogForm>

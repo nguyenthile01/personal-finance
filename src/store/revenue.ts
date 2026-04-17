@@ -47,7 +47,7 @@ export const getRevenues = createAsyncThunk<{ rows: Revenue[]; count: number }, 
 );
 
 export const addRevenue = createAsyncThunk<Revenue, Omit<Revenue, "id">>(
-  "revenue/add",
+  "revenues/add",
   async (newRevenue) => {
     const { data, error } = await supabase
       .from("revenues").insert(newRevenue)
@@ -58,7 +58,7 @@ export const addRevenue = createAsyncThunk<Revenue, Omit<Revenue, "id">>(
   });
 
 export const deleteRevenue = createAsyncThunk<Revenue, number>(
-  "revenue/delete",
+  "revenues/delete",
   async (id) => {
     const { error } = await supabase
       .from("revenues")
@@ -78,7 +78,7 @@ export const deleteRevenue = createAsyncThunk<Revenue, number>(
 );
 
 export const getRevenueComparision = createAsyncThunk(
-  `revenue/getComparision`,
+  `revenues/getComparision`,
   async () => {
     const now = new Date();
     // Current Month Range

@@ -74,7 +74,7 @@ export default function ChartInteractive(
             {Object.entries(chartData.chartConfig).map(([key, value]) => (
               <Line
                 key={key}
-                dataKey={String(value?.label ?? key).toLowerCase()} // Assuming the dataKey in chartData matches the label in chartConfig
+                dataKey={String(key).toLowerCase()} // Assuming the dataKey in chartData matches the label in chartConfig
                 type="monotone"
                 stroke={value.color} // Use a hex code instead of var()
                 strokeWidth={2}
@@ -107,7 +107,7 @@ export default function ChartInteractive(
               {Object.entries(chartData.chartConfig).map(([key, value]) => (
                 <Bar
                   key={key}
-                  dataKey={String(value?.label ?? key).toLowerCase()} // Assuming the dataKey in chartData matches the label in chartConfig
+                  dataKey={String(key).toLowerCase()} // Assuming the dataKey in chartData matches the label in chartConfig
                   fill={value.color} // Use a hex code instead of var()
                 />
               ))}

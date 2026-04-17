@@ -13,7 +13,7 @@ export default function DialogForm({
     children
 }: React.ComponentProps<"div"> & {
     title: string,
-    description?: string,
+    description?: React.ReactNode,
     open: boolean;
     OKBtnName?: string,
     onOpenChange: (open: boolean) => void,

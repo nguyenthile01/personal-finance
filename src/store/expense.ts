@@ -23,7 +23,7 @@ const initialState: ExpenseState = {
 }
 
 export const getExpenses = createAsyncThunk<{ rows: Expense[]; count: number }, { from?: string, to?: string, page?: number, pageSize?: number }>(
-  "expense/get",
+  "expenses/get",
   async (params?: { from?: string, to?: string, page?: number, pageSize?: number }) => {
     const page = params?.page ?? 1;
     const pageSize = params?.pageSize ?? 10;
@@ -48,7 +48,7 @@ export const getExpenses = createAsyncThunk<{ rows: Expense[]; count: number }, 
 );
 
 export const addExpense = createAsyncThunk<Expense, Omit<Expense, "id">>(
-  "expense/add",
+  "expenses/add",
   async (newExpense) => {
     const { data, error } = await supabase
       .from("expenses")
@@ -61,10 +61,10 @@ export const addExpense = createAsyncThunk<Expense, Omit<Expense, "id">>(
 );
 
 export const deleteExpense = createAsyncThunk<Expense, number>(
-  `expense/delete`,
+  `expenses/delete`,
   async (id) => {
     const { error } = await supabase
-      .from("expense")
+      .from("expenses")
       .delete()
       .eq("id", id);
     if (error) throw new Error(error.message);
@@ -81,7 +81,7 @@ export const deleteExpense = createAsyncThunk<Expense, number>(
 );
 
 export const getExpenseComparision = createAsyncThunk(
-  `expense/getComparision`,
+  `expenses/getComparision`,
   async () => {
     const now = new Date();
     // Current Month Range
