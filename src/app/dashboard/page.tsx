@@ -9,12 +9,16 @@ import { format, isSameDay, subDays, startOfMonth, endOfMonth, subMonths } from 
 import type { ChartData, ChartRow } from "@/components/chart-interactive";
 import ChartInteractive from "@/components/chart-interactive";
 import { useTranslation } from "react-i18next";
-
+import { AppConstant } from "@/interfaces/app-common";
+import { clearProfile, getProfile } from "@/store/profile";
 export default function Page() {
   const { t } = useTranslation();
   const { data: revenues } = useSelector((state: RootState) => state.revenue);
   const { data: expenses } = useSelector((state: RootState) => state.expense);
   // chart rows have a date plus named numeric series (revenues/expenses)
+  const authData = localStorage.getItem("sb-vmtthgtnabastdkktcol-auth-token");
+  const user = authData ? JSON.parse(authData).user : null;
+  const { data: profile } = useSelector((state: RootState) => state.profile);
 
   const [range, setRange] = useState("90");
 
@@ -34,6 +38,15 @@ export default function Page() {
       return 0;
     }
   }
+
+  useEffect(() => {
+    dispatch(getProfile(user?.id || ""));
+
+    return () => {
+      // clear slice when leaving the page
+      dispatch(clearProfile());
+    }
+  }, [dispatch, user?.id]);
 
   // compute current and last totals by calendar month
   const currentRevenuesSum = useMemo(() => {
@@ -134,7 +147,7 @@ export default function Page() {
               percentage: (Math.abs(percentage(currentRevenuesSum, lastRevenuesSum)).toFixed(2)).toString()
             })
           }
-          currency={"$"} />
+          currency={profile?.country?.currency || AppConstant.DATA.DEFAULT_CURRENCY.symbol} />
         <SectionCard
           description={t("dashboard.dashboard_total_expenses")}
           title={currentExpensesSum?.toString() || "0"}
@@ -148,7 +161,7 @@ export default function Page() {
               percentage: (Math.abs(percentage(currentExpensesSum, lastExpensesSum)).toFixed(2)).toString()
             })
           }
-          currency={"$"} />
+          currency={profile?.country?.currency || AppConstant.DATA.DEFAULT_CURRENCY.symbol} />
       </div>
       <div id="expense-chart" className="mt-8">
         {/* Chart */}

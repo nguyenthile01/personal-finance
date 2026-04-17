@@ -49,7 +49,11 @@
     "delete_confirmation": "支出を削除しますか？",
     "delete_warning": "削除すると元に戻せません",
     "chart_description_1": "支出の推移を追跡します。",
-    "chart_description_2": "合計支出: {{amount}}{{symbol}}"
+    "chart_description_2": "合計支出: {{amount}}{{symbol}}",
+    "no_category_title": "カテゴリがありません",
+    "no_category_message_part1": "カテゴリが作成されていません。",
+    "no_category_message_part2": "カテゴリページへ移動して作成してください。",
+    "go_to_category": "カテゴリへ移動"
   },
   "revenue": {
     "title": "収入",
@@ -76,7 +80,11 @@
     "delete_confirmation": "収入を削除しますか？",
     "delete_warning": "削除すると元に戻せません",
     "chart_description_1": "収入の推移を追跡します。",
-    "chart_description_2": "合計収入: {{amount}}{{symbol}}"
+    "chart_description_2": "合計収入: {{amount}}{{symbol}}",
+    "no_category_title": "カテゴリがありません",
+    "no_category_message_part1": "カテゴリが作成されていません。",
+    "no_category_message_part2": "カテゴリページへ移動して作成してください。",
+    "go_to_category": "カテゴリへ移動"
   },
   "dashboard": {
     "title": "ダッシュボード",
@@ -106,6 +114,25 @@
     "button_edit": "プロフィール編集",
     "placeholder_select_category": "カテゴリを選択"
   },
+  "category": {
+    "title": "カテゴリ",
+    "table_name": "名前",
+    "table_type": "タイプ",
+    "table_created_at": "作成日",
+    "empty_table_message": "カテゴリデータがありません。",
+    "button_add_category": "カテゴリを追加",
+    "dialog_add_category": "新しいカテゴリを追加",
+    "dialog_delete_category": "カテゴリを削除",
+    "label_name": "名前:",
+    "label_type": "タイプ:",
+    "revenue": "収入",
+    "expense": "支出",
+    "placeholder_select_type": "タイプを選択",
+    "field_name_placeholder": "カテゴリ名を入力",
+    "field_type_placeholder": "カテゴリタイプを入力",
+    "delete_confirmation": "カテゴリを削除しますか？",
+    "delete_warning": "削除すると元に戻せません"
+  },
   "country": {
     "vi": "ベトナム",
     "en": "米国・英国",
@@ -131,8 +158,14 @@
     "button_back": "ホームに戻る",
     "button_contact": "お問い合わせ"
   },
+  "Revenue": "収入",
+  "Expense": "支出",
   "vi": "ベトナム語",
   "en": "英語",
   "ja": "日本語",
-  "errorSys": "システムエラーです。ページを更新して再試行してください！"
+  "error_system": "システムエラーです。ページを更新して再試行してください！",
+  "error_limit_exceeded": "{{name}}の最大数に達しました。新しい{{name}}を追加する前に、いくつかの{{name}}を削除してください。",
+  "error_duplicate_name": "{{name}}の名前はすでに存在します。別の名前を選択してください。",
+  "error_network": "ネットワークエラーです。接続を確認して再試行してください。",
+  "error_unexpected": "予期しないエラーが発生しました。ページを更新して再試行してください。"
 }

@@ -8,6 +8,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import LanguageSwitcher from "@/components/language";
+import { getProfile } from "@/store/profile";
+import i18n from "i18next";
 
 export default function SignIn() {
   const { t } = useTranslation();
@@ -17,10 +19,18 @@ export default function SignIn() {
   const [errorMessages, setErrorMessages] = useState<string[]>([]);
   const dispatch = useAppDispatch();
 
+  const changeLanguage = (lng: string) => {
+    i18n.changeLanguage(lng);
+    localStorage.setItem("lng", lng); // optional: persist user choice
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await dispatch(signIn({ email, password })).unwrap();
+      const result = await dispatch(signIn({ email, password })).unwrap();
+      const profile = await dispatch(getProfile(result.id)).unwrap();
+      changeLanguage(profile.country?.code || "en"); // set language based on user's country
+      localStorage.setItem("user", JSON.stringify({ email }));
       navigate("/");
     } catch (error) {
       const message = error instanceof Error ? error.message : "An unexpected error occurred.";

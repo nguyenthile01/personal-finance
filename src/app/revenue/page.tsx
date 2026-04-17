@@ -3,6 +3,7 @@ import { useAppDispatch, type RootState } from "@/store";
 import { getRevenues, addRevenue, deleteRevenue, clearRevenues, setPage } from "@/store/revenue";
 import { BookUp, CirclePlus, Trash } from "lucide-react";
 import { useEffect, useMemo, useState, type ChangeEvent } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import type { Revenue } from "@/interfaces/revenue";
 import { exportToExcel, formatDate } from "@/lib/utils";
@@ -23,12 +24,15 @@ import ChartInteractive from "@/components/chart-interactive";
 import { PaginationInteractive } from "@/components/pagination-interactive";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useTranslation } from "react-i18next";
+import { clearProfile, getProfile } from "@/store/profile";
 
 export default function Page() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const header = ["revenue.table_category", "revenue.table_amount", "revenue.table_date", "revenue.table_note", ""];
   const dispatch = useAppDispatch();
   const { data: revenueData } = useSelector((state: RootState) => state.revenue);
+  const { data: profile } = useSelector((state: RootState) => state.profile);
   const { page, pageSize, total } = useSelector((state: RootState) => ({
     page: state.revenue.page,
     pageSize: state.revenue.pageSize,
@@ -37,6 +41,7 @@ export default function Page() {
   const { data: categories } = useSelector((state: RootState) => state.categories);
   const { data: user } = useSelector((state: RootState) => state.auth);
   const [openRevenueForm, setOpenRevenueForm] = useState<boolean>(false);
+  const [openNoCategoryWarning, setOpenNoCategoryWarning] = useState<boolean>(false);
   const [dateFilter, setDateFilter] = useState<DateRange | Date | undefined>(
     () => {
       const now = new Date();
@@ -58,26 +63,36 @@ export default function Page() {
     revenue_date: new Date().toLocaleString(),
   }));
   const [range, setRange] = useState<string>("90");
-  useEffect(() => { dispatch(getCategories()) }, [dispatch])
-  useEffect(() => {
-    dispatch(getRevenues({ from: (dateFilter as DateRange)?.from?.toLocaleString(), to: (dateFilter as DateRange)?.to?.toLocaleString(), page, pageSize }));
-    return () => {
-      // clear slice when leaving the page
-      dispatch(clearRevenues());
-      dispatch(clearCategories());
-    }
-  }, [dispatch, dateFilter, page, pageSize]);
-
-  useEffect(() => {
-    // refetch when pagination changes
-    dispatch(getRevenues({ from: (dateFilter as DateRange)?.from?.toLocaleString(), to: (dateFilter as DateRange)?.to?.toLocaleString(), page, pageSize }));
-  }, [dispatch, page, pageSize]);
 
   useEffect(() => {
     if (!user) {
       dispatch(getUser());
     }
   }, [user, dispatch]);
+  useEffect(() => {
+    dispatch(getCategories());
+    dispatch(getProfile(user?.id || ""));
+    return () => {
+      dispatch(clearCategories());
+      dispatch(clearProfile());
+    }
+  }, [dispatch])
+  useEffect(() => {
+    dispatch(getRevenues({ from: (dateFilter as DateRange)?.from?.toLocaleString(), to: (dateFilter as DateRange)?.to?.toLocaleString(), page, pageSize }));
+    return () => {
+      // clear slice when leaving the page
+      dispatch(clearRevenues());
+    }
+  }, [dispatch, dateFilter, page, pageSize]);
+
+  useEffect(() => {
+    // refetch when pagination changes
+    dispatch(getRevenues({ from: (dateFilter as DateRange)?.from?.toLocaleString(), to: (dateFilter as DateRange)?.to?.toLocaleString(), page, pageSize }));
+    // clear slice when leaving the page
+    return () => {
+      dispatch(clearRevenues());
+    }
+  }, [dispatch, page, pageSize]);
 
   const revenueCategories = useMemo(() => categories ? categories.filter(category => category.type === "Revenue") : [], [categories]);
 
@@ -157,7 +172,7 @@ export default function Page() {
         const total = revenueData
           .filter(
             (revenue) =>
-              revenue.category_id === category.id &&
+              revenue.category_id === Number(category.id) &&
               isSameDay(new Date(revenue.revenue_date), date)
           )
           .reduce((sum, el) => sum + el.amount, 0);
@@ -238,7 +253,15 @@ export default function Page() {
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="ghost" onClick={() => { setRevenueSelected(prev => ({ ...prev, user_id: user?.id || null })); setOpenRevenueForm(true) }} >
+                <Button variant="ghost" onClick={() => {
+                  // If there are no revenue categories, show warning dialog and don't open form
+                  if (!revenueCategories || revenueCategories.length === 0) {
+                    setOpenNoCategoryWarning(true);
+                    return;
+                  }
+                  setRevenueSelected(prev => ({ ...prev, user_id: user?.id || null }));
+                  setOpenRevenueForm(true);
+                }} >
                   <CirclePlus className="h-6 w-6 cursor-pointer" />
                 </Button>
               </TooltipTrigger>
@@ -288,7 +311,7 @@ export default function Page() {
               {revenueData && revenueData.length > 0 ? revenueData.map((row, index) => (
                 <TableRow id={row.id} key={index}>
                   <TableCell id="category">{row.category ? row.category.name : "N/A"}</TableCell>
-                  <TableCell id="amount">{row.amount} {AppConstant.DATA.DEFAULT_CURRENCY.code}</TableCell>
+                  <TableCell id="amount">{row.amount} {profile?.country?.currency || AppConstant.DATA.DEFAULT_CURRENCY.symbol}</TableCell>
                   <TableCell id="revenue_date">{formatDate(row.revenue_date?.toLocaleString()!, "DD/MM/YYYY")}</TableCell>
                   <TableCell id="notes">{row.description}</TableCell>
                   <TableCell className="w-10">
@@ -382,6 +405,22 @@ export default function Page() {
               onChange={(e) => handleInputChange(e)} />
           </div>
         </DialogForm>
+      }
+      {openNoCategoryWarning &&
+        <DialogForm
+          title={t("revenue.no_category_title")}
+          description={<>
+            {t("revenue.no_category_message_part1")} <br />
+            <Link to="/category" className="text-primary underline">{t("revenue.go_to_category")}</Link>
+          </>}
+          open={openNoCategoryWarning}
+          onOpenChange={(open) => setOpenNoCategoryWarning(open)}
+          OKFunc={() => {
+            // navigate user to category page
+            navigate("/category");
+          }}
+          OKBtnName={t("revenue.go_to_category")}
+        />
       }
       {openConfirmDeleteForm &&
         <DialogForm title={t("revenue.dialog_delete_revenue")} open={openConfirmDeleteForm} onOpenChange={(open) => setOpenConfirmDeleteForm(open)} OKFunc={handleDeleteRevenue}>

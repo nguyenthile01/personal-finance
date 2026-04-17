@@ -3,8 +3,10 @@ import { Sidebar, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroup
 import { Command } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Collapsible, CollapsibleContent } from "./ui/collapsible";
+import { useTranslation } from "react-i18next";
 
 export default function AppSidebar() {
+    const { t } = useTranslation();
     return (
         <Sidebar>
             <SidebarGroup>
@@ -33,7 +35,7 @@ export default function AppSidebar() {
                                                                                 {child.icon && (
                                                                                     <child.icon className="size-4" />
                                                                                 )}
-                                                                                <span>{child.name}</span>
+                                                                                <span>{t(child.name)}</span>
                                                                             </Link>
                                                                         </SidebarMenuButton>
                                                                     </SidebarMenuItem>
@@ -50,7 +52,7 @@ export default function AppSidebar() {
                                                         {childRoute.icon && (
                                                             <childRoute.icon className="size-4 shrink-0" />
                                                         )}
-                                                        <span>{childRoute.name}</span>
+                                                        <span>{t(childRoute.name)}</span>
                                                     </Link>
                                                 </SidebarMenuButton>
                                             )

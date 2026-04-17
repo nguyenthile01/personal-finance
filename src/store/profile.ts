@@ -9,21 +9,21 @@ const initialState: State<Profile> = {
     loading: false
 }
 
-export const getProfile = createAsyncThunk("profile/getProfile", async (id: string) => {
+export const getProfile = createAsyncThunk("profile/getProfile", async (id: string, { rejectWithValue }) => {
     const { data, error } = await supabase.from("profile").select(`*, country:countries(*)`).eq("id", id).maybeSingle();
-    if (error) throw new Error(error.message);
+    if (error) return rejectWithValue(error);
     return data;
 });
 
-export const updateProfile = createAsyncThunk<Profile, Profile>("profile/updateProfile", async (profile: Profile) => {
+export const updateProfile = createAsyncThunk<Profile, Profile>("profile/updateProfile", async (profile: Profile, { rejectWithValue }) => {
     const { data, error } = await supabase.from("profile").update(profile).eq("id", profile.id).select(`*, country:countries(*)`).single();
-    if (error) throw new Error(error.message);
+    if (error) return rejectWithValue(error);
     return data;
 });
 
-export const addProfile = createAsyncThunk<Profile, Profile>("profile/addProfile", async (profile: Profile) => {
+export const addProfile = createAsyncThunk<Profile, Profile>("profile/addProfile", async (profile: Profile, { rejectWithValue }) => {
     const { data, error } = await supabase.from("profile").insert(profile).select(`*, country:countries(*)`).single();
-    if (error) throw new Error(error.message);
+    if (error) return rejectWithValue(error);
     return data;
 });
 
